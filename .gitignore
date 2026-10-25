@@ -1,0 +1,6 @@
+.Rhistory
+.RData
+.Rproj.user/
+Rplots.pdf
+tests/_snaps/
+node_modules/

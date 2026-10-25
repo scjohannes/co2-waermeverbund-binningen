@@ -1,0 +1,213 @@
+<div class="text-seite formeln">
+
+<h4>Formeln des Modells</h4>
+<p>Das Modell rechnet für jede Variante \(v\) und jedes Betriebsjahr \(t = 1, \dots, 50\)
+(Kalenderjahr \(2027 + t\)). Energie ist in MWh, Emissionen in t CO<sub>2</sub>e. Faktoren in
+g/kWh werden durch 1000 geteilt, denn MWh mal g/kWh ergibt kg. Die Symbole und die zugehörigen
+Regler stehen in der Tabelle am Schluss.</p>
+
+<h5>1. Kumulierte Emissionen</h5>
+<p>Gezeigt wird, wie viel CO<sub>2</sub>e eine Variante bis zum Ende von Jahr \(T\) zusätzlich in
+die Atmosphäre gebracht hat:</p>
+$$E_v(T) \;=\; \sum_{t=1}^{T} \Big[\, F_v(t) + V_v(t) + S_v(t) + B_v(t) \,\Big] \;+\; O_v(T)$$
+<p>\(F\): fossile Verbrennung, \(V\): Vorketten und Nebengase, \(S\): Strom, \(B\): Bau,
+\(O\): biogenes CO<sub>2</sub> aus Holz, das am Ende von Jahr \(T\) noch zusätzlich in der Luft ist.</p>
+
+<h5>2. Wärme, Netz und Brennstoff</h5>
+<p>Alle Varianten liefern dieselbe Raumwärme \(Q\). Die Anteile \(a_{v,k}(t)\) der Techniken
+\(k\) (Holzkessel, Wärmerückgewinnung, zentrale Wärmepumpe, Öl, Gas, Luft-Wärmepumpe,
+Spitzenlast-Wärmepumpe im Haus) summieren sich zu 1. Was über das Netz geht, trägt dessen
+Verluste \(\lambda\):</p>
+$$P_{v,k}(t) \;=\; a_{v,k}(t)\, Q \cdot
+\begin{cases} \dfrac{1}{1-\lambda} &amp; \text{wenn } k \text{ über das Netz liefert} \\[6pt]
+1 &amp; \text{sonst (Einzelheizung, Wärmepumpe im Haus)} \end{cases}
+\qquad
+Q^{\text{Netz}}_v(t) \;=\; Q \sum_{k\,\in\,\text{Netz}} a_{v,k}(t)$$
+<p>Brennstoff der Kessel und Holzmenge vor der Lagerung:</p>
+$$Br_k \;=\; \frac{P_k}{\eta_k} \quad (k = \text{Holz, Öl, Gas}), \qquad
+Br^{\text{Ernte}} \;=\; \frac{Br_{\text{Holz}}}{1-d}$$
+
+<h5>3. Fossile Verbrennung, Vorketten und Nebengase</h5>
+$$F \;=\; \frac{Br_{\text{Öl}}\, e_{\text{Öl}} + Br_{\text{Gas}}\, e_{\text{Gas}}}{1000}$$
+$$V \;=\; \frac{Br_{\text{Öl}}\, v_{\text{Öl}} + Br_{\text{Gas}}\,(v_{\text{Gas}} + m)
++ Br^{\text{Ernte}}\,(v_{\text{Holz}} + n_{\text{Lager}}) + Br_{\text{Holz}}\, n_{\text{Verbr}}}{1000}
+\;+\; \mu\, C$$
+<p>Methanverlust beim Gas, mit 72 g Methan je kWh Erdgas (3,6 MJ geteilt durch 50 MJ/kg):</p>
+$$m \;=\; \ell \cdot 72 \cdot \text{GWP}_{\text{CH}_4} \quad \text{[g CO}_2\text{e/kWh]}$$
+<p>Methan aus dem Schnitzelhaufen: Der Kohlenstoff ist in \(C\) schon als CO<sub>2</sub> gezählt;
+hier kommt nur die Mehrwirkung als Methan dazu. Biogenes Methan hat ein um 2,8 tieferes
+Treibhauspotenzial als fossiles:</p>
+$$\mu \;=\; \frac{12}{44}\; m_L \left( \frac{16}{12}\,\big(\text{GWP}_{\text{CH}_4} - 2{,}8\big) - \frac{44}{12} \right)$$
+
+<h5>4. Strom</h5>
+$$W \;=\; \frac{P_{\text{WP}}}{\text{JAZ}_{\text{WP}}} + \frac{P_{\text{Luft}}}{\text{JAZ}_{\text{Luft}}}
++ \omega\, P_{\text{WRG}} + \pi\, Q^{\text{Netz}},
+\qquad
+W^{\text{Spitze}} \;=\; \frac{P_{\text{Spitze}}}{\text{JAZ}_{\text{Spitze}}}$$
+$$S(t) \;=\; \Big[ W(t) + (1+z)\, W^{\text{Spitze}}(t) \Big]\; \frac{e_{\text{el}}(t)}{1000},
+\qquad
+e_{\text{el}}(t) \;=\; e_{2028} + \big(e_{2050} - e_{2028}\big)\,\min\!\left(\frac{t-1}{22},\,1\right)$$
+
+<h5>5. Bau</h5>
+$$B \;=\; \frac{\big(P_{\text{WP}} + P_{\text{Luft}} + P_{\text{Spitze}}\big)\, b_{\text{WP}}
++ \big(P_{\text{Holz}} + P_{\text{Öl}} + P_{\text{Gas}}\big)\, b_{\text{Kessel}}
++ Q^{\text{Netz}}\, b_{\text{Netz}}}{1000}$$
+
+<h5>6. CO<sub>2</sub> aus dem Holz</h5>
+<p>Heizwert der Schnitzel je kg Trockenmasse, wie geliefert (die Verdampfungswärme des Wassers,
+2,443 MJ/kg, geht verloren), und daraus das CO<sub>2</sub> je MWh Brennstoff:</p>
+$$H_u^{\text{nass}} \;=\; H_u - \frac{u}{1-u}\cdot 2{,}443,
+\qquad
+k \;=\; \frac{c \cdot \tfrac{44}{12}}{H_u^{\text{nass}} / 3{,}6} \quad \text{[t CO}_2\text{/MWh]},
+\qquad
+C(t) \;=\; k\; Br^{\text{Ernte}}(t)$$
+
+<h5>7. Was vom Holz-CO<sub>2</sub> zusätzlich in der Luft bleibt</h5>
+<p>Jedes Betriebsjahr \(y\) bildet einen Jahrgang. Von dessen CO<sub>2</sub> ist nach \(a\) Jahren der
+Anteil \(f_j(y, a)\) noch zusätzlich in der Luft, je nach Herkunft \(j\) des Holzes:</p>
+$$O(T) \;=\; \sum_{y=1}^{T} C(y) \sum_{j} s_j(y)\, f_j\big(y,\; T-y\big),
+\qquad j \in \{\text{lebende Bäume, Äste und Kronen, Schadholz, Kaskade}\}$$
+<p>Das biogene CO<sub>2</sub> eines Jahres ist \(O(T) - O(T-1)\). Die Herkunftsanteile
+\(\hat s_j\) werden auf 1 skaliert; eine Schadholz-Welle \(w\) über \(L_w\) Jahre ersetzt
+zusätzlich gefällte Bäume:</p>
+$$s_{\text{Tot}}(y) = \min\!\Big(\hat s_{\text{Tot}} + w \max\!\big(1 - \tfrac{y-1}{L_w},\,0\big),\; 1\Big),\quad
+s_{\text{Kr}} = \min(\hat s_{\text{Kr}},\, 1 - s_{\text{Tot}}),\quad
+s_{\text{Ka}} = \min(\hat s_{\text{Ka}},\, 1 - s_{\text{Tot}} - s_{\text{Kr}}),\quad
+s_{\text{Fr}} = 1 - s_{\text{Tot}} - s_{\text{Kr}} - s_{\text{Ka}}$$
+<p>Restholz, das sonst im Wald verrotten würde (Halbwertszeit \(\tau\); ein Anteil \(h\) bliebe
+dauerhaft im Boden), und Holz, das sonst zu Produkten würde (gespeicherter Anteil \(p\),
+Halbwertszeit \(\tau_P\)):</p>
+$$f_{\text{Kr}}(a) = h + (1-h)\, 2^{-a/\tau_{\text{Kr}}}, \qquad
+f_{\text{Tot}}(a) = h + (1-h)\, 2^{-a/\tau_{\text{Tot}}}, \qquad
+f_{\text{Ka}}(a) = p\; 2^{-a/\tau_P}$$
+
+<h5>8. Zusätzlich gefällte lebende Bäume</h5>
+<p>Der Vorrat \(B\) ist relativ zum heutigen gemessen (heute \(B = 1\)); \(x = V_{\text{heute}}/V_{\max}\),
+höchstens 0,95. Der Zuwachs hängt von der Dichte ab (theta-logistisch); \(r\) ist so gewählt, dass
+der Nettozuwachs nach Störungen beim heutigen Vorrat \(g_0\) beträgt:</p>
+$$Z(B) \;=\; \frac{r}{\theta}\, B\, \big(1 - (xB)^{\theta}\big), \qquad
+r \;=\; \frac{(g_0 + \delta)\,\theta}{1 - x^{\theta}}$$
+<p>Klimawirkung bis 2078 und Wuchsminderung nach dem Eingriff (Kalenderjahr \(t = y + a\)):</p>
+$$\kappa(t) \;=\; 1 + c_K \min\!\left(\frac{t-1}{50},\, 1\right), \qquad
+\varphi(a) \;=\; \begin{cases} 1 - v_E &amp; a \lt L_E \\ 1 &amp; \text{sonst} \end{cases}$$
+<p>Je Jahrgang laufen drei Bestände, mit Startwerten \(U_0 = 1\) und \(H_0 = \Gamma_0 = 1 - h_E\):</p>
+$$\begin{aligned}
+U_{a+1} &amp;= U_a + \kappa\, Z(U_a) - \delta\, U_a^3 &amp;&amp; \text{ohne Heizwerk, ungenutzt}\\
+H_{a+1} &amp;= H_a + \kappa\, \varphi\, Z(H_a) - \delta\, H_a^3 &amp;&amp; \text{mit Eingriff, sonst ungenutzt}\\
+\Gamma_{a+1} &amp;= \Gamma_a + \kappa\, \varphi\, Z(\Gamma_a) - \delta\, \Gamma_a^3 - \big(\kappa\, Z(1) - \delta\big) &amp;&amp; \text{mit Eingriff, bisherige Nutzung läuft weiter}
+\end{aligned}$$
+<p>Ohne Heizwerk bliebe der Anteil \(w_U\) der Fläche ungenutzt, der Rest würde wie bisher genutzt
+(Vorrat konstant bei 1). Die Lücke je geernteter Einheit:</p>
+$$D(a) \;=\; \frac{w_U\,(U_a - H_a) + (1 - w_U)\,(1 - \Gamma_a)}{h_E}$$
+<p>Verbrannt wird der oberirdische Teil \(1-\rho\) der entnommenen Biomasse; Stöcke und Wurzeln
+zersetzen sich (Halbwertszeit \(\tau_W\)). Dazu kommt ein Verlust an Bodenkohlenstoff \(\beta\)
+in den ersten 10 Jahren, der sich danach über \(\tau_B\) Jahre erholt
+(\(\tau_B = 0\): keine Erholung, letzter Faktor = 1):</p>
+$$f_{\text{Fr}}(a) \;=\; \frac{D(a)}{1-\rho} \;-\; \frac{\rho}{1-\rho}\, 2^{-a/\tau_W}
+\;+\; \beta\, \min\!\left(\frac{a}{10},\,1\right) \max\!\left(1 - \frac{\max(a-10,\,0)}{\tau_B},\; 0\right)$$
+<p>Im ersten Jahr gilt \(f_{\text{Fr}}(0) = 1\): Das verbrannte CO<sub>2</sub> ist vollständig in der Luft.</p>
+
+<h5>9. Kennzahlen im Reiter «Holz &amp; Wald»</h5>
+<p>Holzmenge und Lastwagen, mit der Raumdichte \(\varrho\):</p>
+$$\text{m}^3_{\text{geerntet}} \;=\; \frac{Br^{\text{Ernte}}}{\varrho\, H_u^{\text{nass}} / 3{,}6},
+\qquad
+\text{Lastwagen} \;=\; \frac{Br_{\text{Holz}}}{\varrho\, H_u^{\text{nass}} / 3{,}6}\cdot
+\frac{\text{Srm je m}^3}{\text{Srm je Lastwagen}}$$
+<p>Durchschnittlicher Anteil noch in der Luft bei Dauerbetrieb, und die Schwelle, unter der Wärme
+aus dem Holzkessel weniger CO<sub>2</sub>e verursacht als Wärme aus Öl oder Gas
+(alle Grössen je MWh Wärme aus dem Holzkessel):</p>
+$$\bar f(T) \;=\; \frac{1}{T} \sum_{y=1}^{T} \sum_j s_j(y)\, f_j(y,\, T-y),
+\qquad
+\bar f(T) \;\lt\; \frac{e^{W}_{x} - n^{W}}{k^{W}}$$
+$$k^{W} = \frac{k}{\eta_{\text{Holz}}\,(1-d)}, \qquad
+n^{W} = \frac{(v_{\text{Holz}} + n_{\text{Lager}})/(1-d) + n_{\text{Verbr}}}{1000\, \eta_{\text{Holz}}} + \mu\, k^{W}, \qquad
+e^{W}_{\text{Öl}} = \frac{e_{\text{Öl}} + v_{\text{Öl}}}{1000\, \eta_{\text{Öl}}}, \qquad
+e^{W}_{\text{Gas}} = \frac{e_{\text{Gas}} + v_{\text{Gas}} + m}{1000\, \eta_{\text{Gas}}}$$
+
+<h5>10. Unsicherheit</h5>
+<p>Jede unsichere Annahme \(\theta_i\) erhält eine Verteilung \(F_i\), deren Mittelwert der Wert
+\(m_i\) des Reglers ist (Anteile in % für Beta und Dirichlet geteilt durch 100). Wie eng sie um
+\(m_i\) liegt, ihre Stärke \(S_i\), stammt aus der Literatur: \(S_i\) ist so gewählt, dass die
+Verteilung um den Standardwert \(m_i^0\) das 5. und 95. Perzentil \(a_i\) und \(b_i\) aus der
+Literatur möglichst gut trifft (Reiter «Annahmen»). Beim Verstellen des Reglers bleibt \(S_i\)
+gleich; nur der Mittelwert wandert mit. In diesem Abschnitt bezeichnen \(\alpha, \beta, n_0, k,
+\nu, \kappa\) nur die Parameter dieser Verteilungen.</p>
+$$\mathrm{E}[\theta_i] \;=\; m_i, \qquad
+S_i \;=\; \arg\min_S \Big[\big(F^{-1}(0{,}05 \mid m_i^0, S) - a_i\big)^2
++ \big(F^{-1}(0{,}95 \mid m_i^0, S) - b_i\big)^2\Big]$$
+<p>Betaverteilung, für Anteile und Wirkungsgrade. Die Stärke ist die Konzentration \(n_0\); sie
+wirkt wie \(n_0\) Beobachtungen mit dem Mittelwert \(m\):</p>
+$$\theta \sim \text{Beta}(\alpha, \beta), \qquad \alpha = m\, n_0, \qquad \beta = (1 - m)\, n_0, \qquad
+\operatorname{Var}[\theta] = \frac{m\,(1 - m)}{n_0 + 1}$$
+<p>Gammaverteilung mit Form \(k\) und Rate \(\nu\), für positive Grössen. Die Stärke ist die Form
+\(k\); die relative Streuung bleibt beim Verstellen gleich:</p>
+$$\theta \sim \text{Gamma}(k, \nu), \qquad \nu = \frac{k}{m}, \qquad
+\frac{\sqrt{\operatorname{Var}[\theta]}}{\mathrm{E}[\theta]} = \frac{1}{\sqrt{k}}$$
+<p>Normalverteilung, für Grössen, die auch negativ sein können oder eng um einen Messwert liegen.
+Die Stärke ist die Standardabweichung:</p>
+$$\theta \sim \mathcal N(m, \sigma^2), \qquad \sigma = \frac{b-a}{2\, z_{0{,}95}}, \qquad z_{0{,}95} = 1{,}645$$
+<p>Dirichlet-Verteilung für die vier Herkunftsanteile, mit den Reglern \(\bar s_j\) (auf 1 skaliert)
+als Erwartungswert. Die Konzentration \(\kappa = 10\) entspricht dem Wissen aus zehn Lieferungen
+bekannter Herkunft; jeder einzelne Anteil ist betaverteilt:</p>
+$$(s_1, \dots, s_4) \sim \text{Dir}(\kappa \bar s_1, \dots, \kappa \bar s_4), \qquad
+s_j \sim \text{Beta}\big(\kappa \bar s_j,\; \kappa\,(1 - \bar s_j)\big)$$
+<p>Die Annahmen werden unabhängig voneinander gezogen. Bezugsgrössen, Variantendefinitionen und
+physikalische Konstanten \(\boldsymbol\theta_{\text{fest}}\) übernehmen den Wert des Reglers.
+Gezogen wird mit festen Zufallszahlen \(u_i^{(m)}\); verstellt man einen Regler, ändern sich nur
+die Ziehungen dieser Annahme:</p>
+$$p(\boldsymbol\theta) \;=\; \text{Dir}(s_1, \dots, s_4) \prod_{i} p_i(\theta_i), \qquad
+\theta_i^{(m)} \;=\; F_i^{-1}\big(u_i^{(m)} \mid m_i, S_i\big)$$
+<p>Aus \(M = 1000\) Ziehungen \(\boldsymbol\theta^{(m)}\) folgen die Perzentile der Ergebnisse. Die
+Grafiken zeigen die mittleren 66 % (17. bis 83. Perzentil) und die mittleren 95 % (2,5. bis
+97,5. Perzentil); der Kreis im Reiter «Unsicherheit» ist der Median:</p>
+$$E_v^{(m)}(T) \;=\; E_v\big(T;\ \boldsymbol\theta^{(m)}, \boldsymbol\theta_{\text{fest}}\big), \qquad
+\hat q_{v,\,p}(T) \;=\; p\text{-Perzentil von } \big\{E_v^{(1)}(T), \dots, E_v^{(M)}(T)\big\}$$
+<p>Der Einfluss einer Annahme ist die Rangkorrelation nach Spearman zwischen ihren Ziehungen und den
+Emissionen des Plans:</p>
+$$\rho_i(T) \;=\; \operatorname{corr}\Big(\operatorname{rang} \theta_i^{(m)},\;
+\operatorname{rang} E^{(m)}_{\text{Plan}}(T)\Big)$$
+<p>Weil die Familien konjugiert sind, ergeben neue Daten wieder eine Verteilung derselben Familie.
+Der neue Mittelwert ist ein gewichtetes Mittel aus dem Regler und den Daten; das Gewicht des
+Reglers ist die Stärke aus der Literatur. Beispiele: \(x\) von \(n\) Probeflächen ohne Nutzung
+(Beta–Binomial), \(n_j\) von \(N\) Lieferungen der Herkunft \(j\) (Dirichlet–Multinomial),
+\(n\) Heizwert-Analysen \(x_l\) mit bekannter Messstreuung \(\sigma_x\) (Normal–Normal) und
+Zählungen \(x_l\) in \(n\) Perioden, etwa von Störungsereignissen (Gamma–Poisson):</p>
+$$\text{Beta}\big(m\, n_0,\ (1-m)\, n_0\big) \;\to\; \text{Beta}\big(m\, n_0 + x,\ (1-m)\, n_0 + n - x\big),
+\qquad \mathrm{E} \;=\; \frac{n_0\, m + x}{n_0 + n}$$
+$$\text{Dir}(\kappa \bar s_j) \;\to\; \text{Dir}(\kappa \bar s_j + n_j), \qquad
+\mathrm{E}[s_j] \;=\; \frac{\kappa\, \bar s_j + n_j}{\kappa + N}$$
+$$\mathcal N(m, \sigma^2) \;\to\; \mathcal N\!\left(
+\frac{m/\sigma^2 + \sum_l x_l/\sigma_x^2}{1/\sigma^2 + n/\sigma_x^2},\;
+\frac{1}{1/\sigma^2 + n/\sigma_x^2}\right), \qquad
+\text{Gamma}\Big(k, \frac{k}{m}\Big) \;\to\; \text{Gamma}\Big(k + \sum_l x_l,\; \frac{k}{m} + n\Big)$$
+
+<h5>Symbole und Regler</h5>
+<table class="table table-sm small">
+<thead><tr><th>Symbol</th><th>Bedeutung</th><th>Regler</th></tr></thead>
+<tbody>
+<tr><td>\(Q\)</td><td>Gelieferte Raumwärme pro Jahr</td><td>q_del</td></tr>
+<tr><td>\(\lambda\)</td><td>Netzverluste</td><td>netz_verlust</td></tr>
+<tr><td>\(\pi,\ b_{\text{Netz}}\)</td><td>Pumpstrom, Bau des Netzes</td><td>netz_strom, netz_bau</td></tr>
+<tr><td>\(a_{v,k}\)</td><td>Anteile der Techniken</td><td>plan_*, erd_oel, fossil_ersatz, fossil_dezentral</td></tr>
+<tr><td>\(\eta_k\)</td><td>Jahresnutzungsgrade der Kessel</td><td>eta_holz, eta_oel, eta_gas</td></tr>
+<tr><td>\(e_{\text{Öl}},\ e_{\text{Gas}}\)</td><td>CO<sub>2</sub> aus der Verbrennung</td><td>oel_direkt, gas_direkt</td></tr>
+<tr><td>\(v_{\text{Öl}},\ v_{\text{Gas}},\ v_{\text{Holz}}\)</td><td>Vorketten</td><td>oel_vorkette, gas_vorkette, holz_vorkette</td></tr>
+<tr><td>\(\ell,\ \text{GWP}_{\text{CH}_4}\)</td><td>Methanverlust beim Gas, Treibhauspotenzial</td><td>gas_leck, gwp_ch4</td></tr>
+<tr><td>\(n_{\text{Verbr}},\ n_{\text{Lager}},\ m_L\)</td><td>Methan und Lachgas aus Verbrennung und Lager</td><td>holz_nonco2, lager_n2o, lager_methan</td></tr>
+<tr><td>\(d\)</td><td>Trockenmasseverlust im Lager</td><td>dm_verlust</td></tr>
+<tr><td>\(c,\ H_u,\ u,\ \varrho\)</td><td>Kohlenstoffanteil, Heizwert, Wassergehalt, Raumdichte</td><td>c_anteil, hu_trocken, wassergehalt, dichte</td></tr>
+<tr><td>\(\text{JAZ}\)</td><td>Jahresarbeitszahlen</td><td>jaz_plan, jaz_erdsonde, jaz_luft, jaz_spitze</td></tr>
+<tr><td>\(\omega\)</td><td>Strom der Wärmerückgewinnung</td><td>wrg_strom</td></tr>
+<tr><td>\(e_{2028},\ e_{2050},\ z\)</td><td>Strom-Emissionen, Zuschlag an Spitzentagen</td><td>strom_start, strom_2050, strom_spitze</td></tr>
+<tr><td>\(b_{\text{WP}},\ b_{\text{Kessel}}\)</td><td>Bau von Wärmepumpen und Kesseln</td><td>wp_bau, fossil_bau</td></tr>
+<tr><td>\(\hat s_j,\ w,\ L_w\)</td><td>Herkunft der nächsten Tonne, Schadholz-Welle</td><td>anteil_*, welle_zusatz, welle_jahre</td></tr>
+<tr><td>\(\tau_{\text{Kr}},\ \tau_{\text{Tot}},\ h\)</td><td>Zersetzung von Restholz</td><td>hwz_kronen, hwz_totholz, humus_anteil</td></tr>
+<tr><td>\(p,\ \tau_P\)</td><td>Kaskade: gespeicherter Anteil, Halbwertszeit der Produkte</td><td>produkt_anteil, hwz_produkt</td></tr>
+<tr><td>\(V_{\text{heute}},\ V_{\max},\ g_0,\ \theta\)</td><td>Vorrat, Maximum, Nettozuwachs, Form der Wachstumskurve</td><td>vorrat_heute, vorrat_max, zuwachs, theta</td></tr>
+<tr><td>\(h_E,\ \delta,\ c_K\)</td><td>Eingriffsstärke, Störungen, Klimawirkung</td><td>eingriff, stoerung, klima_zuwachs</td></tr>
+<tr><td>\(v_E,\ L_E\)</td><td>Wuchsminderung nach dem Eingriff</td><td>verj_minderung, verj_jahre</td></tr>
+<tr><td>\(w_U\)</td><td>Ohne Heizwerk ungenutzte Fläche</td><td>anteil_ungenutzt</td></tr>
+<tr><td>\(\rho,\ \tau_W,\ \beta,\ \tau_B\)</td><td>Wurzeln, Bodenkohlenstoff</td><td>wurzel_anteil, wurzel_hwz, boden_verlust, boden_erholung</td></tr>
+</tbody>
+</table>
+</div>

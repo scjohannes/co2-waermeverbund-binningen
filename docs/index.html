@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CO₂-Vergleich Wärmeverbund Binningen</title>
+<meta name="description" content="Wie viel CO₂e der geplante Wärmeverbund Binningen und seine Alternativen bis 2078 zusätzlich in die Atmosphäre bringen – mit allen Annahmen, Quellen und Unsicherheiten zum Selbst-Verstellen.">
+<link rel="stylesheet" href="stil.css">
+</head>
+<body class="tex2jax_ignore">
+
+<header class="kopf">
+  <div class="marke"><strong>CO₂-Vergleich</strong><span>Wärmeverbund Binningen</span></div>
+  <nav class="reiter" role="tablist" aria-label="Ansichten">
+    <button role="tab" id="tab-vergleich" aria-controls="reiter-vergleich" aria-selected="true">Vergleich</button>
+    <button role="tab" id="tab-unsicherheit" aria-controls="reiter-unsicherheit" aria-selected="false" tabindex="-1">Unsicherheit</button>
+    <button role="tab" id="tab-holz" aria-controls="reiter-holz" aria-selected="false" tabindex="-1">Holz &amp; Wald</button>
+    <button role="tab" id="tab-annahmen" aria-controls="reiter-annahmen" aria-selected="false" tabindex="-1">Annahmen</button>
+    <button role="tab" id="tab-methode" aria-controls="reiter-methode" aria-selected="false" tabindex="-1">Methode</button>
+    <button role="tab" id="tab-formeln" aria-controls="reiter-formeln" aria-selected="false" tabindex="-1">Formeln</button>
+  </nav>
+</header>
+
+<div class="rahmen">
+  <aside class="seitenleiste" id="seitenleiste" aria-label="Annahmen">
+    <div class="seitenleiste-kopf">
+      <h2>Annahmen</h2>
+      <button type="button" class="schliessen nur-schmal" id="seitenleiste-zu" aria-label="Annahmen schliessen">✕</button>
+    </div>
+    <p class="hilfe">Alle Werte lassen sich verstellen; das ⓘ zeigt die Quelle. Anteile, die zusammen 100 %
+      ergeben, gleichen sich beim Verstellen aus.</p>
+    <button type="button" class="knopf breit" id="zuruecksetzen">Standardwerte wiederherstellen</button>
+    <div id="hinweise" aria-live="polite"></div>
+    <div id="regler"></div>
+  </aside>
+  <div class="schleier" id="schleier" hidden></div>
+
+  <main>
+    <button type="button" class="knopf nur-schmal annahmen-knopf" id="seitenleiste-auf"
+      aria-controls="seitenleiste">Annahmen anpassen</button>
+
+    <section id="reiter-vergleich" role="tabpanel" aria-labelledby="tab-vergleich">
+      <div class="karte">
+        <div class="karte-kopf">
+          <h3>Zusätzliches CO₂e in der Atmosphäre ab 2028</h3>
+          <div class="kopf-rechts">
+            <span class="rechnet" hidden>Unsicherheit wird berechnet …</span>
+            <button type="button" class="knopf klein" id="csv">CSV</button>
+          </div>
+        </div>
+        <div class="karte-inhalt"><div class="grafik" id="g-verlauf" style="height: 500px"></div></div>
+      </div>
+      <div class="karte">
+        <div class="karte-kopf"><h3>Zusammensetzung nach 10 bis 50 Jahren</h3></div>
+        <div class="karte-inhalt"><div class="grafik" id="g-balken"></div></div>
+      </div>
+    </section>
+
+    <section id="reiter-unsicherheit" role="tabpanel" aria-labelledby="tab-unsicherheit" hidden>
+      <div class="karte">
+        <div class="karte-kopf">
+          <h3>Spannweite der Ergebnisse nach 10 bis 50 Jahren</h3>
+          <span class="rechnet" hidden>Unsicherheit wird berechnet …</span>
+        </div>
+        <div class="karte-inhalt"><div class="grafik" id="g-unsicherheit"></div></div>
+        <p class="karte-fuss">1'000 Ziehungen aus den Verteilungen aller unsicheren Annahmen (Reiter
+          «Annahmen»). Kreis: Median; dicker Balken: mittlere 66 %; dünner Balken: mittlere 95 % der
+          Ergebnisse. Die Werte in kt erscheinen beim Darüberfahren oder Antippen. Die Verteilungen
+          haben die Werte der Regler als Mittelwert;
+          Bezugsgrössen und Varianten sind fest.</p>
+      </div>
+      <div class="karte">
+        <div class="karte-kopf"><h3>Welche Annahmen die Emissionen des Plans bestimmen</h3></div>
+        <div class="karte-inhalt"><div class="grafik" id="g-einfluss"></div></div>
+        <p class="karte-fuss">Die zehn Annahmen mit dem stärksten Zusammenhang nach 50 Jahren.</p>
+      </div>
+    </section>
+
+    <section id="reiter-holz" role="tabpanel" aria-labelledby="tab-holz" hidden>
+      <div class="kennzahlen">
+        <div class="kennzahl"><p class="kennzahl-titel">Holzbedarf im Plan</p><p class="kennzahl-wert" id="k-m3"></p><p class="kennzahl-text" id="k-srm"></p></div>
+        <div class="kennzahl"><p class="kennzahl-titel">Lastwagen pro Jahr</p><p class="kennzahl-wert" id="k-lkw"></p><p class="kennzahl-text">Planungsbericht: rund 83 (Oktober–Mai)</p></div>
+        <div class="kennzahl"><p class="kennzahl-titel">Biogenes CO₂ aus Kamin und Lager</p><p class="kennzahl-wert" id="k-kamin"></p><p class="kennzahl-text">je kWh Wärme aus dem Holzkessel</p></div>
+        <div class="kennzahl"><p class="kennzahl-titel">Holzwärme besser als Öl bzw. Gas nach</p><p class="kennzahl-wert" id="k-ab"></p><p class="kennzahl-text">bei Dauerbetrieb, ohne Wärmerückgewinnung</p></div>
+      </div>
+      <div class="zwei-spalten">
+        <div class="karte">
+          <div class="karte-kopf"><h3>Eine Tonne Holz: Anteil, der noch zusätzlich in der Luft ist</h3></div>
+          <div class="karte-inhalt"><div class="grafik" id="g-antwort" style="height: 440px"></div></div>
+        </div>
+        <div class="karte">
+          <div class="karte-kopf"><h3>Dauerbetrieb: durchschnittlicher Anteil und Schwellen gegenüber Öl und Gas</h3></div>
+          <div class="karte-inhalt"><div class="grafik" id="g-schnitt" style="height: 440px"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="reiter-annahmen" role="tabpanel" aria-labelledby="tab-annahmen" hidden>
+      <div class="karte">
+        <div class="karte-kopf"><h3>Alle Annahmen mit aktuellem Wert</h3></div>
+        <div class="karte-inhalt tabelle-rahmen" id="t-annahmen"></div>
+        <p class="karte-fuss">Zahlen in eckigen Klammern verweisen auf das Literaturverzeichnis.</p>
+      </div>
+      <div class="karte">
+        <div class="karte-kopf"><h3>Unsicherheit der Annahmen</h3></div>
+        <div class="karte-inhalt tabelle-rahmen" id="t-priors"></div>
+        <p class="karte-fuss">Der Regler bestimmt den Mittelwert, die Literatur die Stärke der Verteilung:
+          Sie ist so gewählt, dass die Verteilung um den Standardwert die Perzentile aus der Literatur
+          möglichst gut trifft, und bleibt beim Verstellen des Reglers gleich. Beta für Anteile und
+          Wirkungsgrade, Gamma für positive Grössen, Normal für Werte, die auch negativ sein können,
+          Dirichlet für die Herkunftsanteile. Die Formeln stehen im Reiter «Formeln».</p>
+      </div>
+      <div class="karte">
+        <div class="karte-kopf"><h3>Literatur</h3></div>
+        <div class="karte-inhalt"><ol class="literatur" id="literatur"></ol></div>
+      </div>
+    </section>
+
+    <section id="reiter-methode" role="tabpanel" aria-labelledby="tab-methode" hidden>
+      <div class="text-seite" id="methode-text"></div>
+    </section>
+
+    <section id="reiter-formeln" role="tabpanel" aria-labelledby="tab-formeln" hidden>
+      <div class="tex2jax_process" id="formeln-text"></div>
+    </section>
+  </main>
+</div>
+
+<script src="js/daten.js"></script>
+<script src="js/format.js"></script>
+<script src="js/modell.js"></script>
+<script src="js/verteilung.js"></script>
+<script src="js/regler.js"></script>
+<script src="js/grafik.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
