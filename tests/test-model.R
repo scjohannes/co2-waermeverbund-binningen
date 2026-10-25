@@ -34,7 +34,7 @@ test_that("bei bisheriger Nutzung und maximalem Zuwachs bildet sich die Schuld n
 
 test_that("Bodenkohlenstoff geht in 10 Jahren verloren und erholt sich danach", {
   p <- modifyList(p0, list(zuwachs = 0, stoerung = 0, wurzel_hwz = 1e6,
-                           boden_verlust = 10, boden_erholung = 20))
+                           boden_verlust = 10, boden_erholung = 5))
   f <- antwort_frischholz(p, n = 50)
   expect_equal(f[1, 11] - f[1, 1], 0.10, tolerance = 1e-4)   # Alter 10: voller Verlust
   expect_equal(f[1, 31], f[1, 1], tolerance = 1e-4)          # Alter 30: wieder erholt
@@ -172,8 +172,8 @@ test_that("1 % des Holzkohlenstoffs als Methan ergibt rund 45 g CO2e/kWh Holzwä
 
 test_that("jeder Regler verändert die Emissionen oder die Holzkennzahlen", {
   reg <- lies_register(file.path("..", "parameter.csv"))
-  # Diese Regler wirken nur, wenn ein anderer nicht auf null steht
-  bedingung <- list(welle_jahre = list(welle_zusatz = 40), jaz_luft = list(fossil_ersatz = 20))
+  # Diese Regler wirken nur, wenn ein anderer nicht auf dem Standardwert steht
+  bedingung <- list(welle_jahre = list(welle_zusatz = 40), jaz_luft = list(fossil_laufzeit = 20))
   ergebnis <- function(p) {
     h <- rechne_alles(p)$holz
     c(rechne_kumuliert(p), h$m3, h$srm, h$lkw_pro_jahr)
@@ -200,5 +200,30 @@ test_that("Klima und Bodenerholung wirken auf die Punktschätzung, aber nur schw
   expect_lt(plan50(list(klima_zuwachs = 20)) - basis, -500)
   expect_gt(plan50(list(boden_erholung = 0)) - basis, 500)
   expect_equal(plan50(list(boden_erholung = 0, boden_verlust = 0)),
-               plan50(list(boden_erholung = 80, boden_verlust = 0)))
+               plan50(list(boden_erholung = 20, boden_verlust = 0)))
+})
+
+test_that("kein Regler kehrt die Richtung des Ergebnisses um", {
+  # Jeder Regler wird von links nach rechts geschoben; gemessen wird über alle Varianten und
+  # Jahre, wie weit eine Reihe dabei zurückläuft. Unter 0,2 kt bleiben nur gegenläufige
+  # Wirkungen des Zuwachses (schnelleres Nachwachsen, aber auch schnellerer Vergleichswald),
+  # die im Diagramm nicht zu sehen sind.
+  reg <- lies_register(file.path("..", "parameter.csv"))
+  hin_und_her <- function(y) (sum(abs(diff(y))) - abs(y[length(y)] - y[1])) / 2
+  for (i in which(reg$typ == "slider")) {
+    z <- reg[i, ]
+    gitter <- seq(z$min, z$max, by = z$schritt)
+    if (length(gitter) > 25) gitter <- seq(z$min, z$max, length.out = 25)
+    k <- vapply(gitter, function(w) as.vector(rechne_kumuliert(modifyList(p0, setNames(list(w), z$id)))),
+                numeric(length(VARIANTEN) * JAHRE))
+    expect_lt(max(apply(k, 1, hin_und_her)), 200, label = z$id)
+  }
+})
+
+test_that("die Schadholz-Welle ersetzt nur zusätzlich gefällte Bäume", {
+  ohne <- herkunft_anteile(p0)
+  mit <- herkunft_anteile(modifyList(p0, list(welle_zusatz = 80)))
+  expect_equal(mit[, "kronen"], ohne[, "kronen"])
+  expect_equal(mit[, "kaskade"], ohne[, "kaskade"])
+  expect_true(all(mit[, "frisch"] >= 0))
 })

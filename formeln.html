@@ -23,6 +23,10 @@ $$P_{v,k}(t) \;=\; a_{v,k}(t)\, Q \cdot
 1 &amp; \text{sonst (Einzelheizung, Wärmepumpe im Haus)} \end{cases}
 \qquad
 Q^{\text{Netz}}_v(t) \;=\; Q \sum_{k\,\in\,\text{Netz}} a_{v,k}(t)$$
+<p>In den Varianten 100 % Gas und 100 % Öl laufen die Kessel \(L_F\) Jahre, danach liefern
+Luft-Wärmepumpen die ganze Wärme (\(L_F = 50\): kein Ersatz):</p>
+$$a_{\text{Gas bzw. Öl}}(t) \;=\; \begin{cases} 1 &amp; t \le L_F \\ 0 &amp; \text{sonst} \end{cases},
+\qquad a_{\text{Luft}}(t) \;=\; 1 - a_{\text{Gas bzw. Öl}}(t)$$
 <p>Brennstoff der Kessel und Holzmenge vor der Lagerung:</p>
 $$Br_k \;=\; \frac{P_k}{\eta_k} \quad (k = \text{Holz, Öl, Gas}), \qquad
 Br^{\text{Ernte}} \;=\; \frac{Br_{\text{Holz}}}{1-d}$$
@@ -69,11 +73,12 @@ $$O(T) \;=\; \sum_{y=1}^{T} C(y) \sum_{j} s_j(y)\, f_j\big(y,\; T-y\big),
 \qquad j \in \{\text{lebende Bäume, Äste und Kronen, Schadholz, Kaskade}\}$$
 <p>Das biogene CO<sub>2</sub> eines Jahres ist \(O(T) - O(T-1)\). Die Herkunftsanteile
 \(\hat s_j\) werden auf 1 skaliert; eine Schadholz-Welle \(w\) über \(L_w\) Jahre ersetzt
-zusätzlich gefällte Bäume:</p>
-$$s_{\text{Tot}}(y) = \min\!\Big(\hat s_{\text{Tot}} + w \max\!\big(1 - \tfrac{y-1}{L_w},\,0\big),\; 1\Big),\quad
-s_{\text{Kr}} = \min(\hat s_{\text{Kr}},\, 1 - s_{\text{Tot}}),\quad
-s_{\text{Ka}} = \min(\hat s_{\text{Ka}},\, 1 - s_{\text{Tot}} - s_{\text{Kr}}),\quad
-s_{\text{Fr}} = 1 - s_{\text{Tot}} - s_{\text{Kr}} - s_{\text{Ka}}$$
+nur zusätzlich gefällte Bäume, höchstens deren ganzen Anteil:</p>
+$$\tilde w(y) = \min\!\Big(w \max\!\big(1 - \tfrac{y-1}{L_w},\,0\big),\; \hat s_{\text{Fr}}\Big),\quad
+s_{\text{Fr}}(y) = \hat s_{\text{Fr}} - \tilde w(y),\quad
+s_{\text{Tot}}(y) = \hat s_{\text{Tot}} + \tilde w(y),\quad
+s_{\text{Kr}} = \hat s_{\text{Kr}},\quad
+s_{\text{Ka}} = \hat s_{\text{Ka}}$$
 <p>Restholz, das sonst im Wald verrotten würde (Halbwertszeit \(\tau\); ein Anteil \(h\) bliebe
 dauerhaft im Boden), und Holz, das sonst zu Produkten würde (gespeicherter Anteil \(p\),
 Halbwertszeit \(\tau_P\)):</p>
@@ -87,9 +92,11 @@ höchstens 0,95. Der Zuwachs hängt von der Dichte ab (theta-logistisch); \(r\) 
 der Nettozuwachs nach Störungen beim heutigen Vorrat \(g_0\) beträgt:</p>
 $$Z(B) \;=\; \frac{r}{\theta}\, B\, \big(1 - (xB)^{\theta}\big), \qquad
 r \;=\; \frac{(g_0 + \delta)\,\theta}{1 - x^{\theta}}$$
-<p>Klimawirkung bis 2078 und Wuchsminderung nach dem Eingriff (Kalenderjahr \(t = y + a\)):</p>
+<p>Klimawirkung bis 2078 und Wuchsminderung nach dem Eingriff (Kalenderjahr \(t = y + a\)). Die
+Wuchsminderung \(v_E\) gilt für einen Eingriff von \(h_{\text{Bezug}} = 0{,}2\) (20 % des Vorrats);
+schwächere und stärkere Eingriffe mindern den Zuwachs im selben Verhältnis:</p>
 $$\kappa(t) \;=\; 1 + c_K \min\!\left(\frac{t-1}{50},\, 1\right), \qquad
-\varphi(a) \;=\; \begin{cases} 1 - v_E &amp; a \lt L_E \\ 1 &amp; \text{sonst} \end{cases}$$
+\varphi(a) \;=\; \begin{cases} 1 - \min\!\big(v_E\, h_E / h_{\text{Bezug}},\; 1\big) &amp; a \lt L_E \\ 1 &amp; \text{sonst} \end{cases}$$
 <p>Je Jahrgang laufen drei Bestände, mit Startwerten \(U_0 = 1\) und \(H_0 = \Gamma_0 = 1 - h_E\):</p>
 $$\begin{aligned}
 U_{a+1} &amp;= U_a + \kappa\, Z(U_a) - \delta\, U_a^3 &amp;&amp; \text{ohne Heizwerk, ungenutzt}\\
@@ -101,10 +108,10 @@ H_{a+1} &amp;= H_a + \kappa\, \varphi\, Z(H_a) - \delta\, H_a^3 &amp;&amp; \text
 $$D(a) \;=\; \frac{w_U\,(U_a - H_a) + (1 - w_U)\,(1 - \Gamma_a)}{h_E}$$
 <p>Verbrannt wird der oberirdische Teil \(1-\rho\) der entnommenen Biomasse; Stöcke und Wurzeln
 zersetzen sich (Halbwertszeit \(\tau_W\)). Dazu kommt ein Verlust an Bodenkohlenstoff \(\beta\)
-in den ersten 10 Jahren, der sich danach über \(\tau_B\) Jahre erholt
-(\(\tau_B = 0\): keine Erholung, letzter Faktor = 1):</p>
+in den ersten 10 Jahren, der sich danach jedes Jahr um den Anteil \(\gamma_B\) des Verlusts erholt
+(\(\gamma_B = 0\): keine Erholung; 5 % pro Jahr: nach 20 Jahren erholt):</p>
 $$f_{\text{Fr}}(a) \;=\; \frac{D(a)}{1-\rho} \;-\; \frac{\rho}{1-\rho}\, 2^{-a/\tau_W}
-\;+\; \beta\, \min\!\left(\frac{a}{10},\,1\right) \max\!\left(1 - \frac{\max(a-10,\,0)}{\tau_B},\; 0\right)$$
+\;+\; \beta\, \min\!\left(\frac{a}{10},\,1\right) \max\!\Big(1 - \gamma_B \max(a-10,\,0),\; 0\Big)$$
 <p>Im ersten Jahr gilt \(f_{\text{Fr}}(0) = 1\): Das verbrannte CO<sub>2</sub> ist vollständig in der Luft.</p>
 
 <h5>9. Kennzahlen im Reiter «Holz &amp; Wald»</h5>
@@ -188,7 +195,7 @@ $$\mathcal N(m, \sigma^2) \;\to\; \mathcal N\!\left(
 <tr><td>\(Q\)</td><td>Gelieferte Raumwärme pro Jahr</td><td>q_del</td></tr>
 <tr><td>\(\lambda\)</td><td>Netzverluste</td><td>netz_verlust</td></tr>
 <tr><td>\(\pi,\ b_{\text{Netz}}\)</td><td>Pumpstrom, Bau des Netzes</td><td>netz_strom, netz_bau</td></tr>
-<tr><td>\(a_{v,k}\)</td><td>Anteile der Techniken</td><td>plan_*, erd_oel, fossil_ersatz, fossil_dezentral</td></tr>
+<tr><td>\(a_{v,k},\ L_F\)</td><td>Anteile der Techniken, Laufzeit der Öl- und Gasheizungen</td><td>plan_*, erd_oel, fossil_laufzeit, fossil_dezentral</td></tr>
 <tr><td>\(\eta_k\)</td><td>Jahresnutzungsgrade der Kessel</td><td>eta_holz, eta_oel, eta_gas</td></tr>
 <tr><td>\(e_{\text{Öl}},\ e_{\text{Gas}}\)</td><td>CO<sub>2</sub> aus der Verbrennung</td><td>oel_direkt, gas_direkt</td></tr>
 <tr><td>\(v_{\text{Öl}},\ v_{\text{Gas}},\ v_{\text{Holz}}\)</td><td>Vorketten</td><td>oel_vorkette, gas_vorkette, holz_vorkette</td></tr>
@@ -205,9 +212,9 @@ $$\mathcal N(m, \sigma^2) \;\to\; \mathcal N\!\left(
 <tr><td>\(p,\ \tau_P\)</td><td>Kaskade: gespeicherter Anteil, Halbwertszeit der Produkte</td><td>produkt_anteil, hwz_produkt</td></tr>
 <tr><td>\(V_{\text{heute}},\ V_{\max},\ g_0,\ \theta\)</td><td>Vorrat, Maximum, Nettozuwachs, Form der Wachstumskurve</td><td>vorrat_heute, vorrat_max, zuwachs, theta</td></tr>
 <tr><td>\(h_E,\ \delta,\ c_K\)</td><td>Eingriffsstärke, Störungen, Klimawirkung</td><td>eingriff, stoerung, klima_zuwachs</td></tr>
-<tr><td>\(v_E,\ L_E\)</td><td>Wuchsminderung nach dem Eingriff</td><td>verj_minderung, verj_jahre</td></tr>
+<tr><td>\(v_E,\ L_E\)</td><td>Wuchsminderung nach einem Eingriff von 20 % des Vorrats, Dauer</td><td>verj_minderung, verj_jahre</td></tr>
 <tr><td>\(w_U\)</td><td>Ohne Heizwerk ungenutzte Fläche</td><td>anteil_ungenutzt</td></tr>
-<tr><td>\(\rho,\ \tau_W,\ \beta,\ \tau_B\)</td><td>Wurzeln, Bodenkohlenstoff</td><td>wurzel_anteil, wurzel_hwz, boden_verlust, boden_erholung</td></tr>
+<tr><td>\(\rho,\ \tau_W,\ \beta,\ \gamma_B\)</td><td>Wurzeln, Bodenkohlenstoff (Verlust, Erholung pro Jahr)</td><td>wurzel_anteil, wurzel_hwz, boden_verlust, boden_erholung</td></tr>
 </tbody>
 </table>
 </div>

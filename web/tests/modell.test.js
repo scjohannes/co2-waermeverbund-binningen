@@ -49,6 +49,27 @@ test('jeder Regler auf Minimum und Maximum rechnet wie in R', () => {
   }
 });
 
+test('kein Regler kehrt die Richtung des Ergebnisses um', () => {
+  // wie in tests/test-model.R: Rückschritte unter 0,2 kt sind gegenläufige Wirkungen des Zuwachses
+  const hinUndHer = (y) => {
+    let s = 0;
+    for (let i = 1; i < y.length; i++) s += Math.abs(y[i] - y[i - 1]);
+    return (s - Math.abs(y[y.length - 1] - y[0])) / 2;
+  };
+  for (const z of DATEN.parameter.filter((r) => r.typ === 'slider')) {
+    const schritte = Math.round((z.max - z.min) / z.schritt);
+    const gitter = schritte + 1 > 25
+      ? Array.from({ length: 25 }, (_, k) => z.min + k * (z.max - z.min) / 24)
+      : Array.from({ length: schritte + 1 }, (_, k) => z.min + k * z.schritt);
+    const reihen = gitter.map((w) => Modell.rechneKumuliert(Object.assign({}, p0, { [z.id]: w })));
+    let groesste = 0;
+    Modell.VARIANTEN.forEach((v, i) => {
+      for (let j = 0; j < Modell.JAHRE; j++) groesste = Math.max(groesste, hinUndHer(reihen.map((r) => r[i][j])));
+    });
+    assert.ok(groesste < 200, `${z.id}: läuft um ${Math.round(groesste)} t zurück`);
+  }
+});
+
 test('auf Parametern, die R gezogen hat, rechnet JavaScript dieselben Emissionen', () => {
   for (const [i, z] of referenz.ziehungen.entries()) {
     const p = Object.assign({}, p0, z.parameter);

@@ -29,6 +29,10 @@ HOLZARTEN <- c(
 # Methan je kWh Erdgas (Heizwert rund 50 MJ/kg): 3,6 MJ / 50 MJ/kg = 72 g
 METHAN_G_PRO_KWH <- 72
 
+# Die Wuchsminderung nach dem Eingriff (verj_minderung) gilt für einen Eingriff von 20 % des
+# Vorrats; schwächere und stärkere Eingriffe mindern den Zuwachs im selben Verhältnis.
+EINGRIFF_BEZUG <- 20
+
 lies_register <- function(pfad) {
   reg <- read.csv(pfad, fileEncoding = "UTF-8", stringsAsFactors = FALSE, na.strings = "")
   for (spalte in c("einheit", "auswahl", "quelle")) {
@@ -77,6 +81,8 @@ antwort_frischholz <- function(p, n = JAHRE) {
   # r so gewählt, dass der Nettozuwachs nach Störungen beim heutigen Vorrat g beträgt
   r <- (g + d0) * th / (1 - x^th)
   wachstum <- function(B) r * B * (1 - (B * x)^th) / th      # B relativ zum heutigen Vorrat
+  # Wuchsminderung nach dem Eingriff, im Verhältnis der Eingriffsstärke zu EINGRIFF_BEZUG
+  minderung <- pmin(p$verj_minderung / 100 * p$eingriff / EINGRIFF_BEZUG, 1)
 
   w <- p$anteil_ungenutzt / 100
   ungenutzt <- rep(1, n)            # ohne Heizwerk, ohne Nutzung
@@ -86,7 +92,7 @@ antwort_frischholz <- function(p, n = JAHRE) {
   for (a in seq_len(n) - 1) {
     differenz[, a + 1] <- (w * (ungenutzt - ungenutzt_eingriff) + (1 - w) * (1 - bisher_eingriff)) / h
     klima <- 1 + p$klima_zuwachs / 100 * pmin((seq_len(n) - 1 + a) / JAHRE, 1)
-    verjuengung <- if (a < p$verj_jahre) 1 - p$verj_minderung / 100 else 1
+    verjuengung <- if (a < p$verj_jahre) 1 - minderung else 1
     # bisherige Nutzung: entnimmt, was der Wald beim heutigen Vorrat netto zuwächst
     bisherige_nutzung <- klima * wachstum(1) - d0
     # ein Vorrat kann nicht unter null sinken
@@ -101,8 +107,9 @@ antwort_frischholz <- function(p, n = JAHRE) {
   rho <- p$wurzel_anteil / 100
   alter <- seq_len(n) - 1
   wurzeln_noch_im_boden <- rho / (1 - rho) * 2^(-alter / p$wurzel_hwz)
-  # Bodenkohlenstoff: Verlust in den ersten 10 Jahren, danach Erholung (0 = dauerhaft)
-  erholung <- if (p$boden_erholung > 0) pmax(1 - pmax(alter - 10, 0) / p$boden_erholung, 0) else 1
+  # Bodenkohlenstoff: Verlust in den ersten 10 Jahren, danach Erholung um boden_erholung % des
+  # Verlusts pro Jahr (0 = dauerhaft)
+  erholung <- pmax(1 - p$boden_erholung / 100 * pmax(alter - 10, 0), 0)
   bodenverlust <- p$boden_verlust / 100 * pmin(alter / 10, 1) * erholung
   sweep(differenz / (1 - rho), 2, bodenverlust - wurzeln_noch_im_boden, "+")
 }
@@ -122,15 +129,13 @@ antwort_kaskade <- function(p, n = JAHRE) {
 }
 
 # Herkunft der zusätzlichen Holzmenge je Betriebsjahr; jede Zeile summiert auf 1.
+# Die Schadholz-Welle ersetzt nur zusätzlich gefällte Bäume, höchstens deren ganzen Anteil.
 herkunft_anteile <- function(p, n = JAHRE) {
   s <- c(p$anteil_frisch, p$anteil_kronen, p$anteil_totholz, p$anteil_kaskade)
   s <- if (sum(s) > 0) s / sum(s) else c(1, 0, 0, 0)
-  welle <- p$welle_zusatz / 100 * pmax(1 - (seq_len(n) - 1) / p$welle_jahre, 0)
-  totholz <- pmin(s[3] + welle, 1)
-  kronen <- pmin(s[2], 1 - totholz)
-  kaskade <- pmin(s[4], 1 - totholz - kronen)
-  cbind(frisch = 1 - totholz - kronen - kaskade, kronen = kronen, totholz = totholz,
-        kaskade = kaskade)
+  welle <- pmin(p$welle_zusatz / 100 * pmax(1 - (seq_len(n) - 1) / p$welle_jahre, 0), s[1])
+  cbind(frisch = s[1] - welle, kronen = rep(s[2], n), totholz = s[3] + welle,
+        kaskade = rep(s[4], n))
 }
 
 # Biogenes CO2, das am Ende jedes Betriebsjahrs noch zusätzlich in der Luft ist.
@@ -168,7 +173,7 @@ variante_def <- function(p, variante, n = JAHRE) {
     a[, "wp"] <- 1 - p$erd_oel / 100
     netz["spitze"] <- FALSE
   } else {
-    ersetzt <- p$fossil_ersatz > 0 & seq_len(n) >= p$fossil_ersatz
+    ersetzt <- seq_len(n) > p$fossil_laufzeit   # danach Luft-Wärmepumpen
     a[, if (variante == "100 % Gas") "gas" else "oel"] <- !ersetzt
     a[, "luft"] <- ersetzt
     netz[] <- p$fossil_dezentral < 0.5

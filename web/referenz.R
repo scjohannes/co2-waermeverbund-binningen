@@ -15,7 +15,7 @@ p0 <- standardwerte(register)
 
 faelle <- list(
   standard = list(),
-  dezentral_ersatz = list(fossil_dezentral = 1, fossil_ersatz = 12),
+  dezentral_ersatz = list(fossil_dezentral = 1, fossil_laufzeit = 11),
   welle = list(welle_zusatz = 40, welle_jahre = 8, anteil_frisch = 30, anteil_kronen = 30,
                anteil_totholz = 30, anteil_kaskade = 10),
   wald_extrem = list(vorrat_heute = 321.4, vorrat_max = 592.3, zuwachs = 2.24, theta = 3.19,
@@ -53,7 +53,7 @@ modell <- lapply(faelle, function(aenderung) {
 })
 
 # Jeder Regler auf Minimum und Maximum; bedingte Regler mit eingeschalteter Bedingung
-bedingung <- list(welle_jahre = list(welle_zusatz = 40), jaz_luft = list(fossil_ersatz = 20))
+bedingung <- list(welle_jahre = list(welle_zusatz = 40), jaz_luft = list(fossil_laufzeit = 20))
 extreme <- list()
 for (i in which(register$typ != "fest")) {
   z <- register[i, ]

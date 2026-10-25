@@ -28,6 +28,10 @@
   // Methan je kWh Erdgas (Heizwert rund 50 MJ/kg): 3,6 MJ / 50 MJ/kg = 72 g
   var METHAN_G_PRO_KWH = 72;
 
+  // Die Wuchsminderung nach dem Eingriff (verj_minderung) gilt für einen Eingriff von 20 % des
+  // Vorrats; schwächere und stärkere Eingriffe mindern den Zuwachs im selben Verhältnis.
+  var EINGRIFF_BEZUG = 20;
+
   var TECHNIKEN = ['holz', 'wrg', 'wp', 'oel', 'gas', 'luft', 'spitze'];
 
   function standardwerte(parameter) {
@@ -75,6 +79,8 @@
     // r so gewählt, dass der Nettozuwachs nach Störungen beim heutigen Vorrat gz beträgt
     var r = (gz + d0) * th / (1 - Math.pow(x, th));
     function wachstum(B) { return r * B * (1 - Math.pow(B * x, th)) / th; }  // B relativ zu heute
+    // Wuchsminderung nach dem Eingriff, im Verhältnis der Eingriffsstärke zu EINGRIFF_BEZUG
+    var minderung = Math.min(p.verj_minderung / 100 * p.eingriff / EINGRIFF_BEZUG, 1);
 
     var w = p.anteil_ungenutzt / 100;
     var klimaWirkung = p.klima_zuwachs / 100;
@@ -84,7 +90,7 @@
     var differenz = new Float64Array(n * n);
     var wachstumHeute = wachstum(1);
     for (var a = 0; a < n; a++) {
-      var verjuengung = a < p.verj_jahre ? 1 - p.verj_minderung / 100 : 1;
+      var verjuengung = a < p.verj_jahre ? 1 - minderung : 1;
       for (var k = 0; k < n; k++) {
         differenz[k * n + a] = (w * (ungenutzt[k] - ungenutztEingriff[k]) + (1 - w) * (1 - bisherEingriff[k])) / h;
         var klima = 1 + klimaWirkung * Math.min((k + a) / JAHRE, 1);
@@ -100,12 +106,13 @@
     }
 
     // Verbrannt wird der oberirdische Teil; Stöcke und Wurzeln bleiben und zersetzen sich.
-    // Bodenkohlenstoff: Verlust in den ersten 10 Jahren, danach Erholung (0 = dauerhaft)
+    // Bodenkohlenstoff: Verlust in den ersten 10 Jahren, danach Erholung um boden_erholung % des
+    // Verlusts pro Jahr (0 = dauerhaft)
     var rho = p.wurzel_anteil / 100;
     var zusatz = new Float64Array(n);
     for (var a2 = 0; a2 < n; a2++) {
       var wurzeln = rho / (1 - rho) * Math.pow(2, -a2 / p.wurzel_hwz);
-      var erholung = p.boden_erholung > 0 ? Math.max(1 - Math.max(a2 - 10, 0) / p.boden_erholung, 0) : 1;
+      var erholung = Math.max(1 - p.boden_erholung / 100 * Math.max(a2 - 10, 0), 0);
       var boden = p.boden_verlust / 100 * Math.min(a2 / 10, 1) * erholung;
       zusatz[a2] = boden - wurzeln;
     }
@@ -131,6 +138,7 @@
   }
 
   // Herkunft der zusätzlichen Holzmenge je Betriebsjahr; die vier Anteile summieren auf 1.
+  // Die Schadholz-Welle ersetzt nur zusätzlich gefällte Bäume, höchstens deren ganzen Anteil.
   function herkunftAnteile(p, n) {
     var s = [p.anteil_frisch, p.anteil_kronen, p.anteil_totholz, p.anteil_kaskade];
     var summe = s[0] + s[1] + s[2] + s[3];
@@ -138,14 +146,11 @@
     var aus = { frisch: new Float64Array(n), kronen: new Float64Array(n),
       totholz: new Float64Array(n), kaskade: new Float64Array(n) };
     for (var t = 0; t < n; t++) {
-      var welle = p.welle_zusatz / 100 * Math.max(1 - t / p.welle_jahre, 0);
-      var totholz = Math.min(s[2] + welle, 1);
-      var kronen = Math.min(s[1], 1 - totholz);
-      var kaskade = Math.min(s[3], 1 - totholz - kronen);
-      aus.frisch[t] = 1 - totholz - kronen - kaskade;
-      aus.kronen[t] = kronen;
-      aus.totholz[t] = totholz;
-      aus.kaskade[t] = kaskade;
+      var welle = Math.min(p.welle_zusatz / 100 * Math.max(1 - t / p.welle_jahre, 0), s[0]);
+      aus.frisch[t] = s[0] - welle;
+      aus.kronen[t] = s[1];
+      aus.totholz[t] = s[2] + welle;
+      aus.kaskade[t] = s[3];
     }
     return aus;
   }
@@ -194,7 +199,7 @@
     } else {
       var kessel = variante === '100 % Gas' ? 'gas' : 'oel';
       for (t = 0; t < n; t++) {
-        var ersetzt = p.fossil_ersatz > 0 && t + 1 >= p.fossil_ersatz;
+        var ersetzt = t + 1 > p.fossil_laufzeit;   // danach Luft-Wärmepumpen
         anteile[kessel][t] = ersetzt ? 0 : 1;
         anteile.luft[t] = ersetzt ? 1 : 0;
       }
