@@ -5,6 +5,8 @@ Atmosphäre, verglichen mit anderen Wegen, dieselbe Raumwärme zu liefern? Gerec
 tatsächliche Wirkung über die Zeit: Kamin-CO₂ minus das, was der Wald inzwischen nachgewachsen ist
 bzw. was ohnehin verrottet wäre, plus Vorketten, Strom und Bau.
 
+**Website: https://scjohannes.github.io/co2-waermeverbund-binningen/**
+
 Alle Annahmen lassen sich auf der Website verstellen; jede trägt eine Quelle. Die Unsicherheit wird
 mit 1000 Ziehungen aus den Verteilungen aller unsicheren Annahmen gezeigt.
 
