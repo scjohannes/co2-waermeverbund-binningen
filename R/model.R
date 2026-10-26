@@ -8,7 +8,7 @@ JAHRE <- 50L
 START <- 2028L
 HORIZONTE <- seq(10, 50, 10)
 
-VARIANTEN <- c("Plan IWB", "Plan, Öl statt Holz", "Erdsonden + Öl", "Erdsonden + Strom",
+VARIANTEN <- c("Plan IWB", "Plan, Öl statt Holz", "Erdwärmesonden + Öl", "Erdwärmesonden",
                "100 % Gas", "100 % Öl")
 
 KOMPONENTEN <- c(
@@ -152,7 +152,7 @@ biogen_kumuliert <- function(kamin, anteile, wald) {
 }
 
 # Anteile an der gelieferten Wärme je Betriebsjahr, und welche Teile über das Netz kommen.
-# Spalten: Holzkessel, Wärmerückgewinnung, zentrale Wärmepumpe (Plan bzw. Erdsonden),
+# Spalten: Holzkessel, Wärmerückgewinnung, zentrale Wärmepumpe (Plan bzw. Erdwärmesonden),
 # Öl- und Gaskessel, Luft-Wärmepumpen als Ersatz von Einzelheizungen, Spitzenlast-Wärmepumpen
 # in den Häusern.
 variante_def <- function(p, variante, n = JAHRE) {
@@ -165,10 +165,10 @@ variante_def <- function(p, variante, n = JAHRE) {
     if (variante == "Plan, Öl statt Holz") s <- s + c(-s[["holz"]], 0, 0, s[["holz"]])
     a[, names(s)] <- matrix(s / max(sum(s), 1e-9), n, 4, byrow = TRUE)
     jaz <- p$jaz_plan
-  } else if (variante == "Erdsonden + Öl") {
+  } else if (variante == "Erdwärmesonden + Öl") {
     a[, "oel"] <- p$erd_oel / 100
     a[, "wp"] <- 1 - p$erd_oel / 100
-  } else if (variante == "Erdsonden + Strom") {
+  } else if (variante == "Erdwärmesonden") {
     a[, "spitze"] <- p$erd_oel / 100
     a[, "wp"] <- 1 - p$erd_oel / 100
     netz["spitze"] <- FALSE

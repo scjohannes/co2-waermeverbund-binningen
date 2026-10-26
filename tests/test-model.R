@@ -97,17 +97,17 @@ test_that("«Öl statt Holz» verbrennt Öl für Holz- und Ölanteil zusammen", 
   expect_equal(jahr1, erwartet)
 })
 
-test_that("ohne Spitzenlast sind beide Erdsonden-Varianten gleich", {
+test_that("ohne Spitzenlast sind beide Erdwärmesonden-Varianten gleich", {
   s <- rechne_alles(modifyList(p0, list(erd_oel = 0)))$summe
-  oel <- s$kumuliert[s$variante == "Erdsonden + Öl"]
-  strom <- s$kumuliert[s$variante == "Erdsonden + Strom"]
+  oel <- s$kumuliert[s$variante == "Erdwärmesonden + Öl"]
+  strom <- s$kumuliert[s$variante == "Erdwärmesonden"]
   expect_equal(strom, oel)
 })
 
 test_that("Spitzenlast in den Häusern trägt keine Netzverluste, aber den Strom-Zuschlag", {
   p <- modifyList(p0, list(erd_oel = 10, wp_bau = 0, netz_bau = 0))
   e <- rechne_alles(p)$jahre
-  jahr1 <- e$jaehrlich[e$variante == "Erdsonden + Strom" & e$jahr == 1 & e$komponente == "Strom"]
+  jahr1 <- e$jaehrlich[e$variante == "Erdwärmesonden" & e$jahr == 1 & e$komponente == "Strom"]
   netz <- 0.9 * p$q_del
   erwartet_mwh <- netz / (1 - p$netz_verlust / 100) / p$jaz_erdsonde + netz * p$netz_strom / 100 +
     0.1 * p$q_del / p$jaz_spitze * (1 + p$strom_spitze / 100)

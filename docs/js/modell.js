@@ -11,7 +11,7 @@
   var START = 2028;
   var HORIZONTE = [10, 20, 30, 40, 50];
 
-  var VARIANTEN = ['Plan IWB', 'Plan, Öl statt Holz', 'Erdsonden + Öl', 'Erdsonden + Strom',
+  var VARIANTEN = ['Plan IWB', 'Plan, Öl statt Holz', 'Erdwärmesonden + Öl', 'Erdwärmesonden',
     '100 % Gas', '100 % Öl'];
 
   var KOMPONENTEN = ['Öl/Gas: Verbrennung', 'Vorketten & Nebengase', 'Strom', 'Bau',
@@ -173,7 +173,7 @@
   }
 
   // Anteile an der gelieferten Wärme je Betriebsjahr, und welche Teile über das Netz kommen.
-  // Techniken: Holzkessel, Wärmerückgewinnung, zentrale Wärmepumpe (Plan bzw. Erdsonden),
+  // Techniken: Holzkessel, Wärmerückgewinnung, zentrale Wärmepumpe (Plan bzw. Erdwärmesonden),
   // Öl- und Gaskessel, Luft-Wärmepumpen als Ersatz von Einzelheizungen, Spitzenlast-Wärmepumpen
   // in den Häusern.
   function varianteDef(p, variante, n) {
@@ -189,10 +189,10 @@
       var summe = Math.max(s.holz + s.wrg + s.wp + s.oel, 1e-9);
       ['holz', 'wrg', 'wp', 'oel'].forEach(function (k) { anteile[k].fill(s[k] / summe); });
       jaz = p.jaz_plan;
-    } else if (variante === 'Erdsonden + Öl') {
+    } else if (variante === 'Erdwärmesonden + Öl') {
       anteile.oel.fill(p.erd_oel / 100);
       anteile.wp.fill(1 - p.erd_oel / 100);
-    } else if (variante === 'Erdsonden + Strom') {
+    } else if (variante === 'Erdwärmesonden') {
       anteile.spitze.fill(p.erd_oel / 100);
       anteile.wp.fill(1 - p.erd_oel / 100);
       netz.spitze = false;
