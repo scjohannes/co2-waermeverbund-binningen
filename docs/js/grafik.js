@@ -181,10 +181,14 @@
   function verlauf(behaelter, summen, band) {
     leeren(behaelter);
     var B = behaelter.clientWidth, H = behaelter.clientHeight || 480;
+    // Teile jeder Variante: Zeigt man auf eine Linie oder ihren Namen, treten die anderen zurück
+    var formen = {}, namen = {}, linien = {};
+    M.VARIANTEN.forEach(function (v) { formen[v] = []; namen[v] = []; });
     // schmal: Legende über der Grafik statt Namen am Linienende
     var schmal = B < 560;
     if (schmal) {
       legende(behaelter, M.VARIANTEN.map(function (v) { return { name: v, farbe: FARBEN_VARIANTEN[v] }; }), 'linie');
+      M.VARIANTEN.forEach(function (v, i) { namen[v].push(behaelter.firstChild.children[i]); });
       H -= behaelter.firstChild.offsetHeight + 6;
     }
     var labelBreite = Math.max.apply(null, M.VARIANTEN.map(function (v) { return textbreite(v, 13); }));
@@ -222,26 +226,52 @@
     }
     if (band) {
       M.VARIANTEN.forEach(function (v) {
-        el('path', { d: flaeche(baender[v], 'q2.5', 'q97.5'), fill: FARBEN_VARIANTEN[v], 'fill-opacity': 0.05 }, svg);
+        formen[v].push(el('path', { d: flaeche(baender[v], 'q2.5', 'q97.5'), fill: FARBEN_VARIANTEN[v],
+          'fill-opacity': 0.05 }, svg));
       });
       M.VARIANTEN.forEach(function (v) {
-        el('path', { d: flaeche(baender[v], 'q17', 'q83'), fill: FARBEN_VARIANTEN[v], 'fill-opacity': 0.13 }, svg);
+        formen[v].push(el('path', { d: flaeche(baender[v], 'q17', 'q83'), fill: FARBEN_VARIANTEN[v],
+          'fill-opacity': 0.13 }, svg));
       });
     }
     M.VARIANTEN.forEach(function (v) {
+      var gruppe = linien[v] = el('g', {}, svg);
       var d = summen[v].map(function (s, j) { return (j ? 'L' : 'M') + x(j) + ',' + y(s); }).join('');
-      el('path', { d: d, fill: 'none', stroke: FARBEN_VARIANTEN[v], 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, svg);
+      el('path', { d: d, fill: 'none', stroke: FARBEN_VARIANTEN[v], 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, gruppe);
       M.HORIZONTE.forEach(function (j) {
-        el('circle', { cx: x(j), cy: y(summen[v][j]), r: 3.6, fill: FARBEN_VARIANTEN[v] }, svg);
+        el('circle', { cx: x(j), cy: y(summen[v][j]), r: 3.6, fill: FARBEN_VARIANTEN[v] }, gruppe);
       });
+      formen[v].push(gruppe);
     });
 
+    var namenFlaechen = [];
     if (!schmal) {
       var enden = M.VARIANTEN.map(function (v) { return summen[v][M.JAHRE]; });
       var lage = entzerren(enden, hoechst * 0.06);
       M.VARIANTEN.forEach(function (v, i) {
-        text(svg, x(M.JAHRE) + 12, y(lage[i]) + 4.5, v, { fill: TINTE_2, 'font-size': 13 });
+        namen[v].push(text(svg, x(M.JAHRE) + 12, y(lage[i]) + 4.5, v, { fill: TINTE_2, 'font-size': 13 }));
+        namenFlaechen.push(el('rect', { x: x(M.JAHRE) + 6, y: y(lage[i]) - 9, width: textbreite(v, 13) + 12,
+          height: 18, fill: 'transparent' }, svg));
       });
+    } else {
+      namenFlaechen = M.VARIANTEN.map(function (v) { return namen[v][0]; });
+    }
+    M.VARIANTEN.forEach(function (v) {
+      formen[v].concat(namen[v]).forEach(function (e) { e.classList.add('verlauf-teil'); });
+    });
+
+    var hervorgehoben = null;
+    function hervorheben(v) {
+      if (v === hervorgehoben) return;
+      hervorgehoben = v;
+      M.VARIANTEN.forEach(function (w) {
+        var zurueck = v !== null && w !== v;
+        formen[w].forEach(function (e) { e.style.opacity = zurueck ? 0.15 : ''; });
+        namen[w].forEach(function (e) { e.style.opacity = zurueck ? 0.35 : ''; });
+      });
+      // die hervorgehobene Linie liegt über den anderen
+      M.VARIANTEN.forEach(function (w) { svg.insertBefore(linien[w], fuehrung); });
+      if (v !== null) svg.insertBefore(linien[v], fuehrung);
     }
 
     // Hover: Werte aller Varianten im nächsten Jahr
@@ -251,8 +281,17 @@
       fill: 'transparent' }, svg);
     function zeigen(ereignis) {
       var r = svg.getBoundingClientRect();
-      var px = ereignis.clientX - r.left;
-      var j = Math.max(0, Math.min(M.JAHRE, Math.round((px - m.l) / (B - m.r - m.l) * M.JAHRE)));
+      var px = ereignis.clientX - r.left, py = ereignis.clientY - r.top;
+      var genau = Math.max(0, Math.min(M.JAHRE, (px - m.l) / (B - m.r - m.l) * M.JAHRE));
+      var j = Math.round(genau);
+      // die Linie nahe beim Zeiger hervorheben
+      var j0 = Math.floor(genau), j1 = Math.min(M.JAHRE, j0 + 1), naechste = null;
+      var abstand = ereignis.pointerType === 'touch' ? 24 : 12;
+      M.VARIANTEN.forEach(function (v) {
+        var d = Math.abs(y(summen[v][j0] + (summen[v][j1] - summen[v][j0]) * (genau - j0)) - py);
+        if (d < abstand) { abstand = d; naechste = v; }
+      });
+      hervorheben(naechste);
       fuehrung.setAttribute('x1', x(j)); fuehrung.setAttribute('x2', x(j));
       fuehrung.setAttribute('visibility', 'visible');
       var reihen = M.VARIANTEN.map(function (v) {
@@ -262,7 +301,8 @@
       fenster.innerHTML = '<div class="hinweis-titel">' + j + ' J. (' + (M.START + j) + ')</div>' +
         reihen.map(function (r2) {
           var spanne = r2.z ? '<span class="hinweis-spanne">' + kt(r2.z.q17) + '–' + kt(r2.z.q83) + '</span>' : '';
-          return '<div class="hinweis-zeile"><i style="background:' + FARBEN_VARIANTEN[r2.v] + '"></i><span>' + r2.v +
+          var klasse = naechste !== null && r2.v !== naechste ? 'hinweis-zeile zurueck' : 'hinweis-zeile';
+          return '<div class="' + klasse + '"><i style="background:' + FARBEN_VARIANTEN[r2.v] + '"></i><span>' + r2.v +
             '</span><b>' + kt(r2.wert) + ' kt</b>' + spanne + '</div>';
         }).join('') + (band && j > 0 ? '<div class="hinweis-fuss">Spanne: mittlere 66 % der Ergebnisse</div>' : '');
       fenster.hidden = false;
@@ -271,8 +311,17 @@
       fenster.style.left = Math.max(0, links) + 'px';
       fenster.style.top = m.t + 'px';
     }
-    function verbergen() { fuehrung.setAttribute('visibility', 'hidden'); fenster.hidden = true; }
+    function verbergen() { fuehrung.setAttribute('visibility', 'hidden'); fenster.hidden = true; hervorheben(null); }
     hinweisBinden(svg, flaecheHover, zeigen, verbergen);
+    namenFlaechen.forEach(function (flaecheName, i) {
+      var v = M.VARIANTEN[i];
+      flaecheName.addEventListener('pointerenter', function () { hervorheben(v); });
+      flaecheName.addEventListener('pointerleave', function (e) { if (e.pointerType !== 'touch') hervorheben(null); });
+      flaecheName.addEventListener('pointerdown', function () {
+        offen = { ziel: behaelter, verbergen: verbergen };
+        hervorheben(v);
+      });
+    });
   }
 
   // ---- Zusammensetzung nach 10 bis 50 Jahren ----

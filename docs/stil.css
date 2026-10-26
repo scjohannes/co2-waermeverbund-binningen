@@ -223,6 +223,8 @@ main { flex: 1; min-width: 0; padding: 22px 26px 56px; }
 .hinweis-zeile { display: grid; grid-template-columns: 10px 1fr auto auto; gap: 8px; align-items: center; }
 .hinweis-zeile i { width: 10px; height: 10px; border-radius: 2px; }
 .hinweis-zeile b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.hinweis-zeile.zurueck { opacity: .45; }
+.verlauf-teil { transition: opacity .15s ease; }
 .hinweis-spanne { color: var(--gedaempft); font-variant-numeric: tabular-nums; }
 .hinweis-fuss { margin-top: 4px; color: var(--gedaempft); }
 .hinweisfenster.hinweis-schmal { min-width: 0; white-space: nowrap; }
@@ -300,5 +302,5 @@ tbody tr:nth-child(odd) { background: #fafbfc; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .seitenleiste { transition: none; }
+  .seitenleiste, .verlauf-teil { transition: none; }
 }
