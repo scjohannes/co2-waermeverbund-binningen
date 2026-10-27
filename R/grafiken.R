@@ -1,7 +1,7 @@
 # Grafiken für die App. Farben: Referenzpalette (feste Reihenfolge der Kategorien).
 
-FARBEN_VARIANTEN <- setNames(c("#2a78d6", "#6250d6", "#eb6834", "#e87ba4", "#1baf7a", "#eda100"),
-                             VARIANTEN)
+FARBEN_VARIANTEN <- setNames(c("#2a78d6", "#6250d6", "#eb6834", "#e87ba4", "#91531a", "#1baf7a",
+                               "#eda100"), VARIANTEN)
 FARBEN_KOMPONENTEN <- setNames(c("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"), KOMPONENTEN)
 FARBEN_HOLZ <- setNames(c("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#0b0b0b"),
                         c(unname(HOLZARTEN), "Mischung im ersten Betriebsjahr"))

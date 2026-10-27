@@ -97,6 +97,16 @@ test_that("«Öl statt Holz» verbrennt Öl für Holz- und Ölanteil zusammen", 
   expect_equal(jahr1, erwartet)
 })
 
+test_that("100 % Holz verbrennt Holz für die ganze Wärme, mit derselben Waldwirkung je Tonne", {
+  e <- rechne_alles(p0)$jahre
+  bio <- function(v) e$kumuliert[e$variante == v & e$komponente == "Holz: CO2 netto (Wald)"]
+  anteil <- p0$plan_holz / (p0$plan_holz + p0$plan_wrg + p0$plan_wp + p0$plan_oel)
+  expect_equal(bio("100 % Holz"), bio("Plan IWB") / anteil)
+  # unabhängig von den Anteilen im Plan
+  p <- modifyList(p0, list(plan_holz = 0, plan_wp = 81))
+  expect_equal(rechne_kumuliert(p)["100 % Holz", ], rechne_kumuliert(p0)["100 % Holz", ])
+})
+
 test_that("ohne Spitzenlast sind beide Erdwärmesonden-Varianten gleich", {
   s <- rechne_alles(modifyList(p0, list(erd_oel = 0)))$summe
   oel <- s$kumuliert[s$variante == "Erdwärmesonden + Öl"]

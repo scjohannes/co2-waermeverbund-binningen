@@ -12,7 +12,7 @@
   var HORIZONTE = [10, 20, 30, 40, 50];
 
   var VARIANTEN = ['Plan IWB', 'Plan, Öl statt Holz', 'Erdwärmesonden + Öl', 'Erdwärmesonden',
-    '100 % Gas', '100 % Öl'];
+    '100 % Holz', '100 % Gas', '100 % Öl'];
 
   var KOMPONENTEN = ['Öl/Gas: Verbrennung', 'Vorketten & Nebengase', 'Strom', 'Bau',
     'Holz: CO2 netto (Wald)'];
@@ -196,6 +196,8 @@
       anteile.spitze.fill(p.erd_oel / 100);
       anteile.wp.fill(1 - p.erd_oel / 100);
       netz.spitze = false;
+    } else if (variante === '100 % Holz') {
+      anteile.holz.fill(1);                       // ohne Wärmerückgewinnung
     } else {
       var kessel = variante === '100 % Gas' ? 'gas' : 'oel';
       for (t = 0; t < n; t++) {

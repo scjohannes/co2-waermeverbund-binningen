@@ -9,7 +9,7 @@ START <- 2028L
 HORIZONTE <- seq(10, 50, 10)
 
 VARIANTEN <- c("Plan IWB", "Plan, Öl statt Holz", "Erdwärmesonden + Öl", "Erdwärmesonden",
-               "100 % Gas", "100 % Öl")
+               "100 % Holz", "100 % Gas", "100 % Öl")
 
 KOMPONENTEN <- c(
   "Öl/Gas: Verbrennung",
@@ -172,6 +172,8 @@ variante_def <- function(p, variante, n = JAHRE) {
     a[, "spitze"] <- p$erd_oel / 100
     a[, "wp"] <- 1 - p$erd_oel / 100
     netz["spitze"] <- FALSE
+  } else if (variante == "100 % Holz") {
+    a[, "holz"] <- 1                            # ohne Wärmerückgewinnung
   } else {
     ersetzt <- seq_len(n) > p$fossil_laufzeit   # danach Luft-Wärmepumpen
     a[, if (variante == "100 % Gas") "gas" else "oel"] <- !ersetzt

@@ -7,7 +7,7 @@
   var NS = 'http://www.w3.org/2000/svg';
 
   var FARBEN_VARIANTEN = {};
-  ['#2a78d6', '#6250d6', '#eb6834', '#e87ba4', '#1baf7a', '#eda100'].forEach(function (f, i) {
+  ['#2a78d6', '#6250d6', '#eb6834', '#e87ba4', '#91531a', '#1baf7a', '#eda100'].forEach(function (f, i) {
     FARBEN_VARIANTEN[M.VARIANTEN[i]] = f;
   });
   var FARBEN_KOMPONENTEN = {};
