@@ -177,31 +177,28 @@
 
   // ---- Verlauf der kumulierten Emissionen mit Unsicherheit ----
 
-  // summen: {Variante: [kt in Jahr 0..50]}; band: Zeilen aus mcQuantile über alle Jahre (oder null)
-  function verlauf(behaelter, summen, band) {
+  // summen: {Variante: [kt in Jahr 0..50]}; band: Zeilen aus mcQuantile über alle Jahre (oder null);
+  // varianten: die gezeigten Varianten (Standard: alle)
+  function verlauf(behaelter, summen, band, varianten) {
+    varianten = varianten || M.VARIANTEN;
     leeren(behaelter);
     var B = behaelter.clientWidth, H = behaelter.clientHeight || 480;
     // Teile jeder Variante: Zeigt man auf eine Linie oder ihren Namen, treten die anderen zurück
     var formen = {}, namen = {}, linien = {};
-    M.VARIANTEN.forEach(function (v) { formen[v] = []; namen[v] = []; });
-    // schmal: Legende über der Grafik statt Namen am Linienende
+    varianten.forEach(function (v) { formen[v] = []; namen[v] = []; });
+    // schmal: keine Namen am Linienende; die Farben erklärt die Auswahl der Varianten unter der Grafik
     var schmal = B < 560;
-    if (schmal) {
-      legende(behaelter, M.VARIANTEN.map(function (v) { return { name: v, farbe: FARBEN_VARIANTEN[v] }; }), 'linie');
-      M.VARIANTEN.forEach(function (v, i) { namen[v].push(behaelter.firstChild.children[i]); });
-      H -= behaelter.firstChild.offsetHeight + 6;
-    }
-    var labelBreite = Math.max.apply(null, M.VARIANTEN.map(function (v) { return textbreite(v, 13); }));
+    var labelBreite = Math.max.apply(null, varianten.map(function (v) { return textbreite(v, 13); }));
     var m = { l: schmal ? 46 : 62, r: schmal ? 10 : labelBreite + 22, t: 12, b: 44 };
     var svg = svgFlaeche(behaelter, B, H, 'Kumulierte zusätzliche Emissionen der Varianten ab 2028');
 
     var baender = {};
     if (band) {
-      M.VARIANTEN.forEach(function (v) { baender[v] = [{ jahr: 0, 'q2.5': 0, q17: 0, q83: 0, 'q97.5': 0 }]; });
-      band.forEach(function (z) { baender[z.variante].push(z); });
+      varianten.forEach(function (v) { baender[v] = [{ jahr: 0, 'q2.5': 0, q17: 0, q83: 0, 'q97.5': 0 }]; });
+      band.forEach(function (z) { if (baender[z.variante]) baender[z.variante].push(z); });
     }
     var hoechst = 0;
-    M.VARIANTEN.forEach(function (v) {
+    varianten.forEach(function (v) {
       summen[v].forEach(function (s) { hoechst = Math.max(hoechst, s); });
       if (band) baender[v].forEach(function (z) { hoechst = Math.max(hoechst, z['q97.5']); });
     });
@@ -225,16 +222,16 @@
       return d + 'Z';
     }
     if (band) {
-      M.VARIANTEN.forEach(function (v) {
+      varianten.forEach(function (v) {
         formen[v].push(el('path', { d: flaeche(baender[v], 'q2.5', 'q97.5'), fill: FARBEN_VARIANTEN[v],
           'fill-opacity': 0.05 }, svg));
       });
-      M.VARIANTEN.forEach(function (v) {
+      varianten.forEach(function (v) {
         formen[v].push(el('path', { d: flaeche(baender[v], 'q17', 'q83'), fill: FARBEN_VARIANTEN[v],
           'fill-opacity': 0.13 }, svg));
       });
     }
-    M.VARIANTEN.forEach(function (v) {
+    varianten.forEach(function (v) {
       var gruppe = linien[v] = el('g', {}, svg);
       var d = summen[v].map(function (s, j) { return (j ? 'L' : 'M') + x(j) + ',' + y(s); }).join('');
       el('path', { d: d, fill: 'none', stroke: FARBEN_VARIANTEN[v], 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, gruppe);
@@ -246,17 +243,15 @@
 
     var namenFlaechen = [];
     if (!schmal) {
-      var enden = M.VARIANTEN.map(function (v) { return summen[v][M.JAHRE]; });
+      var enden = varianten.map(function (v) { return summen[v][M.JAHRE]; });
       var lage = entzerren(enden, hoechst * 0.06);
-      M.VARIANTEN.forEach(function (v, i) {
+      varianten.forEach(function (v, i) {
         namen[v].push(text(svg, x(M.JAHRE) + 12, y(lage[i]) + 4.5, v, { fill: TINTE_2, 'font-size': 13 }));
         namenFlaechen.push(el('rect', { x: x(M.JAHRE) + 6, y: y(lage[i]) - 9, width: textbreite(v, 13) + 12,
           height: 18, fill: 'transparent' }, svg));
       });
-    } else {
-      namenFlaechen = M.VARIANTEN.map(function (v) { return namen[v][0]; });
     }
-    M.VARIANTEN.forEach(function (v) {
+    varianten.forEach(function (v) {
       formen[v].concat(namen[v]).forEach(function (e) { e.classList.add('verlauf-teil'); });
     });
 
@@ -264,13 +259,13 @@
     function hervorheben(v) {
       if (v === hervorgehoben) return;
       hervorgehoben = v;
-      M.VARIANTEN.forEach(function (w) {
+      varianten.forEach(function (w) {
         var zurueck = v !== null && w !== v;
         formen[w].forEach(function (e) { e.style.opacity = zurueck ? 0.15 : ''; });
         namen[w].forEach(function (e) { e.style.opacity = zurueck ? 0.35 : ''; });
       });
       // die hervorgehobene Linie liegt über den anderen
-      M.VARIANTEN.forEach(function (w) { svg.insertBefore(linien[w], fuehrung); });
+      varianten.forEach(function (w) { svg.insertBefore(linien[w], fuehrung); });
       if (v !== null) svg.insertBefore(linien[v], fuehrung);
     }
 
@@ -287,14 +282,14 @@
       // die Linie nahe beim Zeiger hervorheben
       var j0 = Math.floor(genau), j1 = Math.min(M.JAHRE, j0 + 1), naechste = null;
       var abstand = ereignis.pointerType === 'touch' ? 24 : 12;
-      M.VARIANTEN.forEach(function (v) {
+      varianten.forEach(function (v) {
         var d = Math.abs(y(summen[v][j0] + (summen[v][j1] - summen[v][j0]) * (genau - j0)) - py);
         if (d < abstand) { abstand = d; naechste = v; }
       });
       hervorheben(naechste);
       fuehrung.setAttribute('x1', x(j)); fuehrung.setAttribute('x2', x(j));
       fuehrung.setAttribute('visibility', 'visible');
-      var reihen = M.VARIANTEN.map(function (v) {
+      var reihen = varianten.map(function (v) {
         var z = band && j > 0 ? baender[v][j] : null;
         return { v: v, wert: summen[v][j], z: z };
       }).sort(function (a, b) { return b.wert - a.wert; });
@@ -314,7 +309,7 @@
     function verbergen() { fuehrung.setAttribute('visibility', 'hidden'); fenster.hidden = true; hervorheben(null); }
     hinweisBinden(svg, flaecheHover, zeigen, verbergen);
     namenFlaechen.forEach(function (flaecheName, i) {
-      var v = M.VARIANTEN[i];
+      var v = varianten[i];
       flaecheName.addEventListener('pointerenter', function () { hervorheben(v); });
       flaecheName.addEventListener('pointerleave', function (e) { if (e.pointerType !== 'touch') hervorheben(null); });
       flaecheName.addEventListener('pointerdown', function () {
@@ -326,19 +321,20 @@
 
   // ---- Zusammensetzung nach 10 bis 50 Jahren ----
 
-  // werte[Horizont][Variante][Komponente]: kumulierte kt
-  function balken(behaelter, werte) {
+  // werte[Horizont][Variante][Komponente]: kumulierte kt; varianten: die gezeigten Varianten
+  function balken(behaelter, werte, varianten) {
+    varianten = varianten || M.VARIANTEN;
     leeren(behaelter);
     legende(behaelter, M.KOMPONENTEN.map(function (k) {
       return { name: k.replace('CO2', 'CO₂'), farbe: FARBEN_KOMPONENTEN[k] };
     }), 'flaeche');
     var B = behaelter.clientWidth;
-    var labelBreite = Math.max.apply(null, M.VARIANTEN.map(function (v) { return textbreite(v, 12.5); })) + 12;
+    var labelBreite = Math.max.apply(null, varianten.map(function (v) { return textbreite(v, 12.5); })) + 12;
     var nSpalten = spalten(M.HORIZONTE.length, B - labelBreite, 165);
     var nZeilen = Math.ceil(M.HORIZONTE.length / nSpalten);
     var luecke = 18, streifen = 24, achse = 22, zeilenHoehe = 30;
     var panelB = (B - labelBreite - (nSpalten - 1) * luecke) / nSpalten;
-    var panelH = M.VARIANTEN.length * zeilenHoehe;
+    var panelH = varianten.length * zeilenHoehe;
     var H = nZeilen * (streifen + panelH + achse + 10) + 26;
     var svg = svgFlaeche(behaelter, B, H, 'Zusammensetzung der kumulierten Emissionen nach 10 bis 50 Jahren');
 
@@ -347,13 +343,13 @@
       var x0 = labelBreite + sp * (panelB + luecke), y0 = ze * (streifen + panelH + achse + 10);
       text(svg, x0, y0 + 16, horizontLabel(j), { fill: TINTE, 'font-weight': 600, 'font-size': 13 });
       var top = y0 + streifen;
-      var summen = M.VARIANTEN.map(function (v) {
+      var summen = varianten.map(function (v) {
         return M.KOMPONENTEN.reduce(function (s, k) { return s + werte[j][v][k]; }, 0);
       });
-      var minimum = Math.min(0, Math.min.apply(null, M.VARIANTEN.map(function (v) {
+      var minimum = Math.min(0, Math.min.apply(null, varianten.map(function (v) {
         return M.KOMPONENTEN.reduce(function (s, k) { return s + Math.min(0, werte[j][v][k]); }, 0);
       })));
-      var maximum = Math.max.apply(null, M.VARIANTEN.map(function (v) {
+      var maximum = Math.max.apply(null, varianten.map(function (v) {
         return M.KOMPONENTEN.reduce(function (s, k) { return s + Math.max(0, werte[j][v][k]); }, 0);
       }));
       var xWerte = ticks(minimum, maximum, 3);
@@ -362,7 +358,7 @@
       xWerte.forEach(function (v) {
         text(svg, x(v), top + panelH + 15, F.zahl(v, stellenFuer(xWerte)), { 'text-anchor': 'middle' });
       });
-      M.VARIANTEN.forEach(function (v, i) {
+      varianten.forEach(function (v, i) {
         var yb = top + i * zeilenHoehe + zeilenHoehe * 0.16, hb = zeilenHoehe * 0.68;
         if (sp === 0) text(svg, labelBreite - 10, yb + hb / 2 + 4, v, { 'text-anchor': 'end', 'font-size': 12.5 });
         var plus = 0, minus = 0;
@@ -384,15 +380,17 @@
 
   // ---- Spannweite der Ergebnisse ----
 
-  function unsicherheit(behaelter, zeilen) {
+  // zeilen: Quantile je Variante und Horizont; varianten: die gezeigten Varianten
+  function unsicherheit(behaelter, zeilen, varianten) {
+    varianten = varianten || M.VARIANTEN;
     leeren(behaelter);
     var B = behaelter.clientWidth;
-    var labelBreite = Math.max.apply(null, M.VARIANTEN.map(function (v) { return textbreite(v, 12.5); })) + 12;
+    var labelBreite = Math.max.apply(null, varianten.map(function (v) { return textbreite(v, 12.5); })) + 12;
     var nSpalten = spalten(M.HORIZONTE.length, B - labelBreite, 150);
     var nZeilen = Math.ceil(M.HORIZONTE.length / nSpalten);
     var luecke = 18, streifen = 24, achse = 22, zeilenHoehe = nSpalten === 1 ? 30 : 44;
     var panelB = (B - labelBreite - (nSpalten - 1) * luecke) / nSpalten;
-    var panelH = M.VARIANTEN.length * zeilenHoehe;
+    var panelH = varianten.length * zeilenHoehe;
     var H = nZeilen * (streifen + panelH + achse + 10) + 26;
     var svg = svgFlaeche(behaelter, B, H, 'Spannweite der Ergebnisse nach 10 bis 50 Jahren');
     var fenster = hinweisfenster(behaelter);
@@ -427,7 +425,7 @@
       var x0 = labelBreite + sp * (panelB + luecke), y0 = ze * (streifen + panelH + achse + 10);
       text(svg, x0, y0 + 16, horizontLabel(j), { fill: TINTE, 'font-weight': 600, 'font-size': 13 });
       var top = y0 + streifen;
-      var teil = zeilen.filter(function (z) { return z.jahr === j; });
+      var teil = zeilen.filter(function (z) { return z.jahr === j && varianten.indexOf(z.variante) >= 0; });
       var maximum = Math.max.apply(null, teil.map(function (z) { return z['q97.5']; }));
       var xWerte = ticks(0, maximum, 3);
       var x = skala(0, maximum * 1.08, x0, x0 + panelB);
@@ -435,7 +433,7 @@
       xWerte.forEach(function (v) {
         text(svg, x(v), top + panelH + 15, F.zahl(v, stellenFuer(xWerte)), { 'text-anchor': 'middle' });
       });
-      M.VARIANTEN.forEach(function (v, i) {
+      varianten.forEach(function (v, i) {
         var z = teil.filter(function (r) { return r.variante === v; })[0];
         var ym = top + i * zeilenHoehe + zeilenHoehe / 2, farbe = FARBEN_VARIANTEN[v];
         if (sp === 0) text(svg, labelBreite - 10, ym + 4, v, { 'text-anchor': 'end', 'font-size': 12.5 });

@@ -202,6 +202,17 @@ main { flex: 1; min-width: 0; padding: 22px 26px 56px; }
 .grafik { position: relative; width: 100%; }
 .grafik svg { display: block; overflow: visible; }
 
+.varianten-wahl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; margin: 14px 0 0; font-size: .9rem; }
+.varianten-alle[hidden] { display: none; }
+.varianten-titel { color: var(--gedaempft); }
+.variante-wahl { display: inline-flex; align-items: center; gap: 6px; color: var(--tinte); cursor: pointer; }
+.variante-wahl input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+.variante-wahl input:disabled { cursor: default; }
+.variante-wahl:has(input:not(:checked)) { color: var(--gedaempft); }
+.varianten-alle { padding: 0; border: 0; background: none; color: var(--primaer); font: inherit; cursor: pointer; }
+.varianten-alle:hover { text-decoration: underline; }
+.varianten-alle:focus-visible { outline: 2px solid var(--primaer); outline-offset: 2px; }
+
 .legende { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0 0 10px; color: var(--tinte-2); font-size: .85rem; }
 .legende-eintrag { display: inline-flex; align-items: center; gap: 6px; }
 .zeichen-flaeche { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }

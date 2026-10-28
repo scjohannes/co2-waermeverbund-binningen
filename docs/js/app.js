@@ -21,6 +21,7 @@
   var erg = null;          // deterministische Rechnung mit den Werten der Regler
   var mc = null;           // Zusammenfassung der Monte-Carlo-Rechnung
   var aktiv = 'vergleich';
+  var verborgen = [];      // Varianten, die in den Grafiken ausgeblendet sind
 
   function $(id) { return document.getElementById(id); }
   function stellen(schritt) { var t = String(schritt), i = t.indexOf('.'); return i < 0 ? 0 : t.length - i - 1; }
@@ -245,6 +246,60 @@
     ziel.appendChild(box);
   }
 
+  // ---- Auswahl der Varianten in den Grafiken ----
+
+  function sichtbar() {
+    return M.VARIANTEN.filter(function (v) { return verborgen.indexOf(v) < 0; });
+  }
+
+  // Unter den Grafiken ein Kästchen je Variante, in ihrer Farbe; alle Zeilen zeigen dieselbe
+  // Auswahl, und mindestens eine Variante bleibt sichtbar
+  function variantenWahlBauen() {
+    var kaestchen = [], alleKnoepfe = [];
+    Array.prototype.forEach.call(document.querySelectorAll('.varianten-wahl'), function (ziel) {
+      var titel = document.createElement('span');
+      titel.className = 'varianten-titel';
+      titel.textContent = 'Varianten';
+      ziel.appendChild(titel);
+      M.VARIANTEN.forEach(function (v) {
+        var label = document.createElement('label');
+        label.className = 'variante-wahl';
+        var box = document.createElement('input');
+        box.type = 'checkbox';
+        box.style.accentColor = G.FARBEN_VARIANTEN[v];
+        box.addEventListener('change', function () {
+          var i = verborgen.indexOf(v);
+          if (box.checked && i >= 0) verborgen.splice(i, 1);
+          else if (!box.checked && i < 0) verborgen.push(v);
+          aktualisieren();
+        });
+        label.appendChild(box);
+        label.appendChild(document.createTextNode(v));
+        ziel.appendChild(label);
+        kaestchen.push({ box: box, variante: v });
+      });
+      var alle = document.createElement('button');
+      alle.type = 'button';
+      alle.className = 'varianten-alle';
+      alle.textContent = 'Alle zeigen';
+      alle.addEventListener('click', function () { verborgen = []; aktualisieren(); });
+      ziel.appendChild(alle);
+      alleKnoepfe.push(alle);
+    });
+
+    function aktualisieren() {
+      var letzte = sichtbar().length === 1;
+      kaestchen.forEach(function (k) {
+        k.box.checked = verborgen.indexOf(k.variante) < 0;
+        k.box.disabled = k.box.checked && letzte;
+        k.box.parentNode.title = k.box.disabled ? 'Mindestens eine Variante bleibt sichtbar' : '';
+      });
+      alleKnoepfe.forEach(function (alle) { alle.hidden = verborgen.length === 0; });
+      zeichnen();
+    }
+    aktualisieren();
+  }
+
   // ---- Zeichnen ----
 
   function summenKt() {
@@ -256,7 +311,7 @@
   function zeichnen() {
     if (!erg) return;
     if (aktiv === 'vergleich') {
-      G.verlauf($('g-verlauf'), summenKt(), mc ? mc.band : null);
+      G.verlauf($('g-verlauf'), summenKt(), mc ? mc.band : null, sichtbar());
       var werte = {};
       M.HORIZONTE.forEach(function (j) {
         werte[j] = {};
@@ -265,9 +320,10 @@
           M.KOMPONENTEN.forEach(function (k, i) { werte[j][v][k] = erg.varianten[v].kumuliert[i][j - 1] / 1000; });
         });
       });
-      G.balken($('g-balken'), werte);
+      G.balken($('g-balken'), werte, sichtbar());
     } else if (aktiv === 'unsicherheit' && mc) {
-      G.unsicherheit($('g-unsicherheit'), mc.band.filter(function (z) { return M.HORIZONTE.indexOf(z.jahr) >= 0; }));
+      G.unsicherheit($('g-unsicherheit'), mc.band.filter(function (z) { return M.HORIZONTE.indexOf(z.jahr) >= 0; }),
+        sichtbar());
       G.einfluss($('g-einfluss'), mc.einfluss, beschriftung);
     } else if (aktiv === 'holz') {
       var h = erg.holz;
@@ -403,6 +459,7 @@
 
   function start() {
     reglerBauen();
+    variantenWahlBauen();
     reiterBauen();
     literatur();
     $('methode-text').innerHTML = D.methode;
