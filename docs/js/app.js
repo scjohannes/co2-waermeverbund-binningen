@@ -336,9 +336,85 @@
       $('k-ab').textContent = 'Öl ' + ab('100 % Öl') + ' · Gas ' + ab('100 % Gas');
       G.antwort($('g-antwort'), h.kurven);
       G.schnitt($('g-schnitt'), h.schnitt, h.schwellen);
+      waldErklaerung();
     } else if (aktiv === 'annahmen') {
       tabellen();
     }
+  }
+
+  // ---- Reiter «Holz & Wald»: warum der Wald nur langsam aufholt ----
+
+  function prozent(x) { return F.zahl(100 * x) + ' %'; }
+
+  function waldErklaerung() {
+    var alter = M.frischholzAlter(p);
+    var w = M.waldWachstum(p);
+    var werte = {
+      vorrat_spitze: F.zahl(w.vorrat_spitze, -1), eingriff: F.zahl(p.eingriff),
+      zuwachs_heute: F.zahl(w.zuwachs_heute, 2), zuwachs_eingriff: F.zahl(w.zuwachs_eingriff, 2),
+      verlust_heute: F.zahl(w.verlust_heute, 2), verlust_eingriff: F.zahl(w.verlust_eingriff, 2),
+      a10: F.zahl(100 * alter[0])
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-wald]'), function (e) {
+      e.textContent = werte[e.getAttribute('data-wald')];
+    });
+
+    var t = document.createElement('table');
+    t.className = 'wald-tabelle';
+    var kopf = t.createTHead().insertRow();
+    ['', 'Wert'].concat(M.WALD_ALTER.map(function (a) { return 'nach ' + a + ' J.'; })).forEach(function (s, i) {
+      var th = document.createElement('th');
+      th.scope = 'col';
+      th.textContent = s;
+      if (i > 1) th.className = 'zahl';
+      kopf.appendChild(th);
+    });
+    var koerper = t.createTBody();
+    function zeile(titel, wert, zellen, klasse) {
+      var r = koerper.insertRow();
+      if (klasse) r.className = klasse;
+      if (titel !== null) {
+        var th = document.createElement('th');
+        th.scope = 'row';
+        th.textContent = titel.text;
+        if (titel.zeilen) th.rowSpan = titel.zeilen;
+        r.appendChild(th);
+      }
+      r.insertCell().textContent = wert;
+      zellen.forEach(function (z) {
+        var c = r.insertCell();
+        c.className = 'zahl';
+        c.textContent = z;
+      });
+    }
+    function abschnitt(text) {
+      var c = koerper.insertRow().insertCell();
+      c.colSpan = 2 + M.WALD_ALTER.length;
+      c.className = 'wald-abschnitt';
+      c.textContent = text;
+    }
+
+    var istStandard = Object.keys(standard).every(function (id) { return Math.abs(p[id] - standard[id]) < 1e-9; });
+    abschnitt(istStandard ? 'Realistischer Fall' : 'Mit den eingestellten Werten');
+    zeile({ text: istStandard ? 'Standardwerte' : 'Eingestellte Werte' }, '', alter.map(prozent), 'wald-haupt');
+    var band = mc && mc.wald;
+    var leer = M.WALD_ALTER.map(function () { return '…'; });
+    zeile({ text: 'Alle unsicheren Annahmen zugleich, 1\'000 Ziehungen', zeilen: 2 }, 'Median',
+      band ? band.map(function (z) { return prozent(z.q50); }) : leer);
+    zeile(null, 'mittlere zwei Drittel', band ? band.map(function (z) {
+      return F.zahl(100 * z.q17) + '–' + prozent(z.q83);
+    }) : leer);
+
+    abschnitt('Eine Annahme am Rand ihrer Verteilung, die übrigen wie eingestellt');
+    V.waldSzenarien(p, D.priors).forEach(function (s, i) {
+      var z = nachId[s.id];
+      var wert = F.zahl(s.wert, stellen(z.schritt));
+      zeile(i % 2 === 0 ? { text: z.label, zeilen: 2 } : null,
+        z.einheit === 'θ' ? 'θ = ' + wert : wert + ' ' + z.einheit, s.anteil.map(prozent));
+    });
+    var ziel = $('t-wald');
+    ziel.innerHTML = '';
+    ziel.appendChild(t);
   }
 
   function tabelle(ziel, spalten, zeilen) {
@@ -464,6 +540,7 @@
     literatur();
     $('methode-text').innerHTML = D.methode;
     $('formeln-text').innerHTML = D.formeln;
+    $('wald-text').innerHTML = D.wald;
     $('zuruecksetzen').addEventListener('click', function () {
       p = Object.assign({}, standard);
       D.parameter.forEach(function (z) { anzeigen(z.id); });

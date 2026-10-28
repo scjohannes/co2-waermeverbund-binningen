@@ -114,6 +114,30 @@ antwort_frischholz <- function(p, n = JAHRE) {
   sweep(differenz / (1 - rho), 2, bodenverlust - wurzeln_noch_im_boden, "+")
 }
 
+# Gefällte lebende Bäume, im ersten Betriebsjahr geerntet: Anteil ihres CO2, der nach WALD_ALTER
+# Jahren noch zusätzlich in der Luft ist.
+WALD_ALTER <- c(10, 20, 30, 50)
+
+frischholz_alter <- function(p) antwort_frischholz(p, max(WALD_ALTER) + 1)[1, WALD_ALTER + 1]
+
+# Zur Erklärung im Reiter «Holz & Wald»: Zuwachs vor Störungen und Störungsverluste in m³/ha pro
+# Jahr beim heutigen Vorrat und gleich nach dem Eingriff (ohne Klimawirkung und Wuchsminderung),
+# sowie der Vorrat, bei dem der Wald am meisten zuwächst. Wie in antwort_frischholz().
+wald_wachstum <- function(p) {
+  x  <- min(p$vorrat_heute / p$vorrat_max, 0.95)
+  th <- p$theta
+  d0 <- p$stoerung / 100
+  r <- (p$zuwachs / 100 + d0) * th / (1 - x^th)
+  zuwachs <- function(B) p$vorrat_heute * r * B * (1 - (B * x)^th) / th
+  verlust <- function(B) p$vorrat_heute * d0 * B^3
+  nach <- 1 - p$eingriff / 100
+  list(
+    vorrat_spitze = p$vorrat_heute / x * (1 + th)^(-1 / th),
+    zuwachs_heute = zuwachs(1), zuwachs_eingriff = zuwachs(nach),
+    verlust_heute = verlust(1), verlust_eingriff = verlust(nach)
+  )
+}
+
 # Restholz, das sonst im Wald verrotten würde: Anteil, der ohne Nutzung noch im Wald
 # (oder dauerhaft im Boden) wäre und darum durch das Verbrennen zusätzlich in der Luft ist.
 antwort_zerfall <- function(hwz, humus, n = JAHRE) {

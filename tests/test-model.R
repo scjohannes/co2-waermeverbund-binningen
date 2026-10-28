@@ -49,6 +49,26 @@ test_that("auch extreme Waldannahmen liefern endliche Ergebnisse", {
   expect_true(all(is.finite(rechne_kumuliert(p))))
 })
 
+test_that("die Kurzfassung der gefällten Bäume nimmt die erste Zeile der Waldantwort", {
+  f <- antwort_frischholz(p0, n = 51)
+  expect_equal(frischholz_alter(p0), f[1, WALD_ALTER + 1])
+  expect_equal(frischholz_alter(p0)[1:3], antwort_frischholz(p0)[1, c(11, 21, 31)])
+})
+
+test_that("Zuwachs zur Erklärung: netto wie der Regler, am grössten beim Spitzenvorrat", {
+  w <- wald_wachstum(p0)
+  expect_equal(w$zuwachs_heute - w$verlust_heute, p0$zuwachs / 100 * p0$vorrat_heute)
+  # Zuwachs bei Vorrat V: Spitze B = V / V_heute, bei leicht mehr oder weniger Vorrat kleiner
+  zuwachs_bei <- function(V) {
+    wald_wachstum(modifyList(p0, list(eingriff = 100 * (1 - V / p0$vorrat_heute))))$zuwachs_eingriff
+  }
+  expect_gt(zuwachs_bei(w$vorrat_spitze), zuwachs_bei(w$vorrat_spitze * 1.05))
+  expect_gt(zuwachs_bei(w$vorrat_spitze), zuwachs_bei(w$vorrat_spitze * 0.95))
+  ohne <- wald_wachstum(modifyList(p0, list(eingriff = 0)))
+  expect_equal(ohne$zuwachs_eingriff, ohne$zuwachs_heute)
+  expect_equal(ohne$verlust_eingriff, ohne$verlust_heute)
+})
+
 test_that("Restholz ist nach einer Halbwertszeit zur Hälfte zersetzt", {
   expect_equal(antwort_zerfall(10, 0)[11], 0.5)
   expect_equal(antwort_zerfall(10, 0.1)[11], 0.1 + 0.9 * 0.5)

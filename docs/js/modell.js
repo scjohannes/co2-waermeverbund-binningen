@@ -121,6 +121,34 @@
     return aus;
   }
 
+  // Gefällte lebende Bäume, im ersten Betriebsjahr geerntet: Anteil ihres CO2, der nach
+  // WALD_ALTER Jahren noch zusätzlich in der Luft ist.
+  var WALD_ALTER = [10, 20, 30, 50];
+
+  function frischholzAlter(p) {
+    var f = antwortFrischholz(p, WALD_ALTER[WALD_ALTER.length - 1] + 1);
+    return WALD_ALTER.map(function (alter) { return f[alter]; });
+  }
+
+  // Zur Erklärung im Reiter «Holz & Wald»: Zuwachs vor Störungen und Störungsverluste in m³/ha
+  // pro Jahr beim heutigen Vorrat und gleich nach dem Eingriff (ohne Klimawirkung und
+  // Wuchsminderung), sowie der Vorrat, bei dem der Wald am meisten zuwächst. Wie in
+  // antwortFrischholz().
+  function waldWachstum(p) {
+    var x = Math.min(p.vorrat_heute / p.vorrat_max, 0.95);
+    var th = p.theta;
+    var d0 = p.stoerung / 100;
+    var r = (p.zuwachs / 100 + d0) * th / (1 - Math.pow(x, th));
+    function zuwachs(B) { return p.vorrat_heute * r * B * (1 - Math.pow(B * x, th)) / th; }
+    function verlust(B) { return p.vorrat_heute * d0 * B * B * B; }
+    var nach = 1 - p.eingriff / 100;
+    return {
+      vorrat_spitze: p.vorrat_heute / x * Math.pow(1 + th, -1 / th),
+      zuwachs_heute: zuwachs(1), zuwachs_eingriff: zuwachs(nach),
+      verlust_heute: verlust(1), verlust_eingriff: verlust(nach)
+    };
+  }
+
   // Restholz, das sonst im Wald verrotten würde: Anteil, der ohne Nutzung noch im Wald
   // (oder dauerhaft im Boden) wäre und darum durch das Verbrennen zusätzlich in der Luft ist.
   function antwortZerfall(hwz, humus, n) {
@@ -399,6 +427,7 @@
     KOMPONENTEN: KOMPONENTEN, HOLZARTEN: HOLZARTEN, MISCHUNG: MISCHUNG,
     standardwerte: standardwerte, lagerMethanFaktor: lagerMethanFaktor, stromPfad: stromPfad,
     holzKennzahlen: holzKennzahlen, antwortFrischholz: antwortFrischholz,
+    WALD_ALTER: WALD_ALTER, frischholzAlter: frischholzAlter, waldWachstum: waldWachstum,
     antwortZerfall: antwortZerfall, antwortKaskade: antwortKaskade,
     herkunftAnteile: herkunftAnteile, biogenKumuliert: biogenKumuliert,
     varianteDef: varianteDef, varianteKomponenten: varianteKomponenten,

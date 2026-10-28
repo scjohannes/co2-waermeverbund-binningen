@@ -60,6 +60,27 @@ test_that("ein Regler am Rand ergibt eine Annahme ohne Streuung", {
   expect_equal(unname(z[, "netz_bau"]), rep(0, 50))
 })
 
+test_that("Waldszenarien: jede Annahme einzeln am 5. und 95. Perzentil, die übrigen wie eingestellt", {
+  s <- wald_szenarien(p0, priors)
+  expect_equal(vapply(s, `[[`, "", "id"), rep(WALD_ANNAHMEN, each = 2))
+  pr <- priors[priors$id == "vorrat_max", ]
+  expect_equal(c(s[[1]]$wert, s[[2]]$wert), quantil_prior(pr, p0, c(0.05, 0.95), priors))
+  expect_equal(s[[1]]$anteil, frischholz_alter(modifyList(p0, list(vorrat_max = s[[1]]$wert))))
+  # tieferer Höchstvorrat: der ungenutzte Wald wächst bald kaum mehr, der genutzte holt schneller auf
+  expect_true(all(s[[1]]$anteil[-1] < s[[2]]$anteil[-1]))
+})
+
+test_that("Spannweite der Waldantwort: ohne Streuung überall der eingestellte Wert", {
+  z <- prior_ziehen(priors, p0, 200)
+  q <- wald_spannweite(p0, z)
+  expect_equal(q$alter, WALD_ALTER)
+  expect_true(all(q$q2.5 <= q$q17 & q$q17 <= q$q50 & q$q50 <= q$q83 & q$q83 <= q$q97.5))
+  fest <- z[1:3, , drop = FALSE]
+  for (id in colnames(fest)) fest[, id] <- p0[[id]]
+  q <- wald_spannweite(p0, fest)
+  for (spalte in c("q2.5", "q50", "q97.5")) expect_equal(q[[spalte]], frischholz_alter(p0))
+})
+
 test_that("verstellt man einen Regler, ändern sich nur die Ziehungen dieser Annahme", {
   a <- prior_ziehen(priors, p0, 100)
   b <- prior_ziehen(priors, modifyList(p0, list(netz_verlust = 12)), 100)

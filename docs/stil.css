@@ -278,6 +278,22 @@ tbody tr:nth-child(odd) { background: #fafbfc; }
 .text-seite h5, #formeln-text h5 { font-size: 1.1rem; font-weight: 600; margin: 1.6rem 0 .5rem; }
 #formeln-text mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
 
+.wald-text { max-width: 880px; }
+.wald-text > p:first-child { margin-top: 0; }
+.wald-text h5 { font-size: 1.05rem; font-weight: 600; margin: 1.4rem 0 .4rem; }
+.wald-text p { margin: 0 0 .6rem; }
+.wald-tabelle { margin: .6rem 0 .4rem; }
+.wald-tabelle tbody tr:nth-child(odd) { background: none; }
+.wald-tabelle tbody th { font-weight: 400; white-space: normal; min-width: 14em; }
+.wald-tabelle .zahl { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wald-tabelle td:not(.zahl):not(.wald-abschnitt) { min-width: 7em; color: var(--gedaempft); }
+.wald-tabelle .wald-abschnitt { padding-top: 14px; font-weight: 600; background: var(--hintergrund); }
+.wald-tabelle .wald-haupt th, .wald-tabelle .wald-haupt td { font-weight: 600; color: var(--tinte); }
+@media (max-width: 600px) {
+  .wald-tabelle tbody th { min-width: 9em; }
+  .wald-tabelle td:not(.zahl):not(.wald-abschnitt) { min-width: 5em; }
+}
+
 .nur-schmal { display: none; }
 .schleier { position: fixed; inset: 0; z-index: 30; background: rgba(16, 24, 40, .35); }
 .annahmen-knopf { margin-bottom: 14px; }

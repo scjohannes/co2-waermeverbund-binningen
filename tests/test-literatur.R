@@ -7,11 +7,19 @@ source(file.path("..", "R", "unsicherheit.R"), encoding = "UTF-8")
 register <- lies_register(file.path("..", "parameter.csv"))
 priors <- lies_priors(file.path("..", "priors.csv"))
 literatur <- lies_literatur(file.path("..", "literatur.csv"))
-# Die App nummeriert Quellen der Regler und Begründungen der Verteilungen gemeinsam
-texte <- c(register$quelle, priors$begruendung)
+# Die App nummeriert Quellen der Regler und Begründungen der Verteilungen gemeinsam, dazu den
+# Erklärtext im Reiter «Holz & Wald» der Website
+wald <- paste(readLines(file.path("..", "wald.html"), encoding = "UTF-8", warn = FALSE), collapse = "\n")
+texte <- c(register$quelle, priors$begruendung, wald)
 
 test_that("jeder Verweis in Parameterliste und Verteilungen steht im Literaturverzeichnis", {
   expect_no_error(zitate_nummerieren(texte, literatur))
+})
+
+test_that("der Erklärtext ändert die Nummern der Parameterliste nicht", {
+  ohne <- zitate_nummerieren(c(register$quelle, priors$begruendung), literatur)
+  mit <- zitate_nummerieren(texte, literatur)
+  expect_equal(mit$verzeichnis, ohne$verzeichnis)
 })
 
 test_that("jeder Eintrag im Literaturverzeichnis wird zitiert", {

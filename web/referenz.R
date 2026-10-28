@@ -105,6 +105,18 @@ ziehungen <- lapply(seq_len(nrow(z)), function(i) {
        kumuliert = lapply(setNames(VARIANTEN, VARIANTEN), function(v) rechne_kumuliert(q)[v, ]))
 })
 
+# Reiter «Holz & Wald»: Erklärung, Szenarien und Spannweite der Waldantwort (auf den Ziehungen oben)
+wald_faelle <- list(standard = list(),
+                    verstellt = list(vorrat_max = 450, theta = 1.5, eingriff = 30, anteil_ungenutzt = 0))
+wald <- list(
+  faelle = lapply(wald_faelle, function(aenderung) {
+    p <- modifyList(p0, aenderung)
+    list(parameter = p, alter = frischholz_alter(p), wachstum = wald_wachstum(p),
+         szenarien = wald_szenarien(p, priors))
+  }),
+  spannweite = wald_spannweite(p0, z)
+)
+
 # Monte-Carlo-Zusammenfassung (andere Zufallszahlen als in JavaScript: nur statistisch vergleichbar)
 cl <- mc_cluster()
 mc <- mc_rechnen(p0, priors, n = 1000, cl = cl)
@@ -159,6 +171,7 @@ referenz <- list(
   perzentile = perzentile,
   roh = roh,
   ziehungen = ziehungen,
+  wald = wald,
   mc = list(quantile = mc_q, mittel = als_liste(mittel)),
   umverteilen = umverteilen_faelle,
   formate = formate,

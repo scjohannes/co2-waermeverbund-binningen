@@ -207,6 +207,32 @@ mc_quantile <- function(mc, jahre = HORIZONTE, wk = INTERVALLE) {
   }))
 }
 
+# Reiter «Holz & Wald»: die Annahmen mit dem grössten Einfluss darauf, wie schnell der Wald nach
+# dem Fällen aufholt. Jede wird einzeln auf das 5. und das 95. Perzentil ihrer Verteilung gesetzt,
+# die übrigen bleiben beim Wert des Reglers.
+WALD_ANNAHMEN <- c("vorrat_max", "theta", "stoerung", "anteil_ungenutzt", "verj_minderung")
+
+wald_szenarien <- function(p, priors) {
+  unlist(lapply(WALD_ANNAHMEN, function(id) {
+    werte <- quantil_prior(priors[priors$id == id, ], p, c(0.05, 0.95), priors)
+    lapply(werte, function(w) {
+      list(id = id, wert = w, anteil = frischholz_alter(modifyList(p, setNames(list(w), id))))
+    })
+  }), recursive = FALSE)
+}
+
+# Dasselbe für alle Ziehungen z der Monte-Carlo-Rechnung: Perzentile des Anteils je Alter.
+wald_spannweite <- function(p, z, wk = INTERVALLE) {
+  a <- vapply(seq_len(nrow(z)), function(i) {
+    q <- p
+    q[colnames(z)] <- as.list(z[i, ])
+    frischholz_alter(q)
+  }, numeric(length(WALD_ALTER)))
+  q <- t(apply(a, 1, quantile, wk, names = FALSE))
+  colnames(q) <- paste0("q", 100 * wk)
+  data.frame(alter = WALD_ALTER, q)
+}
+
 # Rangkorrelation (Spearman) jeder unsicheren Annahme mit den kumulierten Emissionen einer Variante.
 # Annahmen ohne Streuung (Regler am Rand) fallen weg.
 mc_einfluss <- function(mc, variante = "Plan IWB", jahre = c(20, 50)) {

@@ -353,6 +353,42 @@
     return zeilen;
   }
 
+  // Reiter «Holz & Wald»: die Annahmen mit dem grössten Einfluss darauf, wie schnell der Wald
+  // nach dem Fällen aufholt. Jede wird einzeln auf das 5. und das 95. Perzentil ihrer Verteilung
+  // gesetzt, die übrigen bleiben beim Wert des Reglers.
+  var WALD_ANNAHMEN = ['vorrat_max', 'theta', 'stoerung', 'anteil_ungenutzt', 'verj_minderung'];
+
+  function waldSzenarien(p, priors) {
+    var zeilen = [];
+    WALD_ANNAHMEN.forEach(function (id) {
+      var pr = priors.filter(function (x) { return x.id === id; })[0];
+      quantilPrior(pr, p, [0.05, 0.95], priors).forEach(function (wert) {
+        var q = Object.assign({}, p);
+        q[id] = wert;
+        zeilen.push({ id: id, wert: wert, anteil: Modell.frischholzAlter(q) });
+      });
+    });
+    return zeilen;
+  }
+
+  // Dasselbe für alle Ziehungen der Monte-Carlo-Rechnung: Perzentile des Anteils je Alter.
+  function waldSpannweite(p, ziehungen, wk) {
+    wk = wk || INTERVALLE;
+    var ids = Object.keys(ziehungen), n = ziehungen[ids[0]].length;
+    var werte = Modell.WALD_ALTER.map(function () { return new Float64Array(n); });
+    var q = Object.assign({}, p);
+    for (var i = 0; i < n; i++) {
+      for (var k = 0; k < ids.length; k++) q[ids[k]] = ziehungen[ids[k]][i];
+      Modell.frischholzAlter(q).forEach(function (a, j) { werte[j][i] = a; });
+    }
+    return Modell.WALD_ALTER.map(function (alter, j) {
+      var x = werte[j].sort();
+      var zeile = { alter: alter };
+      wk.forEach(function (w) { zeile[spaltenname(w)] = quantilSortiert(x, w); });
+      return zeile;
+    });
+  }
+
   function raenge(x) {   // mittlere Ränge bei Bindungen
     var idx = Array.from(x, function (_, i) { return i; }).sort(function (a, b) { return x[a] - x[b]; });
     var r = new Float64Array(x.length);
@@ -400,12 +436,14 @@
     return aus;
   }
 
-  // Was die Website braucht: Perzentile für jedes Jahr und den Einfluss der Annahmen.
+  // Was die Website braucht: Perzentile für jedes Jahr, den Einfluss der Annahmen und die
+  // Spannweite der Waldantwort.
   function mcZusammenfassen(p, priors, n, id) {
     var mc = mcRechnen(p, priors, n);
     var jahre = [];
     for (var j = 1; j <= Modell.JAHRE; j++) jahre.push(j);
-    return { id: id, n: n, band: mcQuantile(mc, jahre), einfluss: mcEinfluss(mc) };
+    return { id: id, n: n, band: mcQuantile(mc, jahre), einfluss: mcEinfluss(mc),
+      wald: waldSpannweite(p, mc.ziehungen) };
   }
 
   // ---- Übersicht für den Reiter «Annahmen» ----
@@ -446,6 +484,7 @@
     verteilung: verteilung, quantilPrior: quantilPrior, dirichletMittel: dirichletMittel,
     priorZiehen: priorZiehen, mcRechnen: mcRechnen, mcQuantile: mcQuantile, mcEinfluss: mcEinfluss,
     mcZusammenfassen: mcZusammenfassen,
+    WALD_ANNAHMEN: WALD_ANNAHMEN, waldSzenarien: waldSzenarien, waldSpannweite: waldSpannweite,
     quantilSortiert: quantilSortiert, spearman: spearman, priorTabelle: priorTabelle,
     INTERVALLE: INTERVALLE
   };

@@ -104,6 +104,40 @@ test('Perzentile und Rangkorrelation werden wie in R berechnet', () => {
     referenz.spearman.rho, 1e-12, 1e-12, 'Spearman');
 });
 
+test('Erklärung, Szenarien und Spannweite der Waldantwort wie in R', () => {
+  for (const [fall, r] of Object.entries(referenz.wald.faelle)) {
+    reiheNahe(Modell.frischholzAlter(r.parameter), r.alter, 1e-9, 1e-12, `${fall} Alter`);
+    const w = Modell.waldWachstum(r.parameter);
+    for (const name of Object.keys(r.wachstum)) nahe(w[name], r.wachstum[name], 1e-12, 1e-12, `${fall} ${name}`);
+    const s = V.waldSzenarien(r.parameter, priors);
+    assert.equal(s.length, r.szenarien.length, `${fall} Anzahl Szenarien`);
+    s.forEach((z, i) => {
+      const soll = r.szenarien[i];
+      assert.equal(z.id, soll.id);
+      nahe(z.wert, soll.wert, 1e-6, 1e-9, `${fall} ${z.id} Wert`);
+      reiheNahe(z.anteil, soll.anteil, 1e-6, 1e-9, `${fall} ${z.id} Anteil`);
+    });
+  }
+  // dieselben 25 Ziehungen wie in R
+  const ziehungen = {};
+  for (const id of Object.keys(referenz.ziehungen[0].parameter)) {
+    ziehungen[id] = Float64Array.from(referenz.ziehungen, (z) => z.parameter[id]);
+  }
+  const ist = V.waldSpannweite(p0, ziehungen);
+  referenz.wald.spannweite.forEach((soll, j) => {
+    assert.equal(ist[j].alter, soll.alter);
+    for (const spalte of ['q2.5', 'q17', 'q50', 'q83', 'q97.5']) {
+      nahe(ist[j][spalte], soll[spalte], 1e-9, 1e-12, `Spannweite ${soll.alter} J. ${spalte}`);
+    }
+  });
+});
+
+test('die Zusammenfassung für die Website enthält die Spannweite der Waldantwort', () => {
+  const e = V.mcZusammenfassen(p0, priors, 60, 1);
+  assert.deepEqual(e.wald.map((z) => z.alter), Modell.WALD_ALTER);
+  assert.ok(e.wald.every((z) => z.q17 <= z.q50 && z.q50 <= z.q83));
+});
+
 test('der Einfluss lässt Annahmen ohne Streuung weg', () => {
   const mc = V.mcRechnen(Object.assign({}, p0, { verj_minderung: 0 }), priors, 60);
   const e = V.mcEinfluss(mc);
