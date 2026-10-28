@@ -63,11 +63,15 @@ test_that("ein Regler am Rand ergibt eine Annahme ohne Streuung", {
 test_that("Waldszenarien: jede Annahme einzeln am 5. und 95. Perzentil, die übrigen wie eingestellt", {
   s <- wald_szenarien(p0, priors)
   expect_equal(vapply(s, `[[`, "", "id"), rep(WALD_ANNAHMEN, each = 2))
+  v <- s[vapply(s, `[[`, "", "id") == "vorrat_max"]
   pr <- priors[priors$id == "vorrat_max", ]
-  expect_equal(c(s[[1]]$wert, s[[2]]$wert), quantil_prior(pr, p0, c(0.05, 0.95), priors))
-  expect_equal(s[[1]]$anteil, frischholz_alter(modifyList(p0, list(vorrat_max = s[[1]]$wert))))
-  # tieferer Höchstvorrat: der ungenutzte Wald wächst bald kaum mehr, der genutzte holt schneller auf
-  expect_true(all(s[[1]]$anteil[-1] < s[[2]]$anteil[-1]))
+  expect_equal(c(v[[1]]$wert, v[[2]]$wert), quantil_prior(pr, p0, c(0.05, 0.95), priors))
+  expect_equal(v[[1]]$anteil, frischholz_alter(modifyList(p0, list(vorrat_max = v[[1]]$wert))))
+  # tiefere Wachstumsgrenze: der ungenutzte Wald wächst bald kaum mehr, der genutzte holt schneller auf
+  expect_true(all(v[[1]]$anteil[-1] < v[[2]]$anteil[-1]))
+  # höhere Störungsverluste: der dichte ungenutzte Wald verliert mehr, der genutzte holt schneller auf
+  st <- s[vapply(s, `[[`, "", "id") == "stoerung"]
+  expect_true(all(st[[2]]$anteil[-1] < st[[1]]$anteil[-1]))
 })
 
 test_that("Spannweite der Waldantwort: ohne Streuung überall der eingestellte Wert", {

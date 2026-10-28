@@ -210,7 +210,7 @@ mc_quantile <- function(mc, jahre = HORIZONTE, wk = INTERVALLE) {
 # Reiter «Holz & Wald»: die Annahmen mit dem grössten Einfluss darauf, wie schnell der Wald nach
 # dem Fällen aufholt. Jede wird einzeln auf das 5. und das 95. Perzentil ihrer Verteilung gesetzt,
 # die übrigen bleiben beim Wert des Reglers.
-WALD_ANNAHMEN <- c("vorrat_max", "theta", "stoerung", "anteil_ungenutzt", "verj_minderung")
+WALD_ANNAHMEN <- c("stoerung", "anteil_ungenutzt", "auslichtung", "verj_minderung", "eingriff", "vorrat_max")
 
 wald_szenarien <- function(p, priors) {
   unlist(lapply(WALD_ANNAHMEN, function(id) {

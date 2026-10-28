@@ -24,8 +24,9 @@ test_that("wird der Wald ohnehin genutzt, bleibt die Schuld länger als bei unge
 })
 
 test_that("bei bisheriger Nutzung und maximalem Zuwachs bildet sich die Schuld nicht zurück", {
-  # theta = 1 und Vorrat = halbes Maximum: Zuwachs ist maximal und hängt kaum vom Vorrat ab
-  p <- modifyList(p0, list(anteil_ungenutzt = 0, theta = 1, vorrat_max = 2 * p0$vorrat_heute,
+  # theta = 1 (nach 20 % Entnahme 4 % weniger Zuwachs) und Vorrat = halbes Maximum: Zuwachs ist
+  # maximal und hängt kaum vom Vorrat ab
+  p <- modifyList(p0, list(anteil_ungenutzt = 0, auslichtung = -4, vorrat_max = 2 * p0$vorrat_heute,
                            stoerung = 0, klima_zuwachs = 0, eingriff = 5, verj_minderung = 0,
                            boden_verlust = 0, wurzel_hwz = 1e6))
   f <- antwort_frischholz(p, n = 11)
@@ -42,11 +43,37 @@ test_that("Bodenkohlenstoff geht in 10 Jahren verloren und erholt sich danach", 
 
 test_that("auch extreme Waldannahmen liefern endliche Ergebnisse", {
   # Ziehung, die ohne Untergrenze einen negativen Vorrat und NaN ergab
-  p <- modifyList(p0, list(vorrat_heute = 321.4, vorrat_max = 592.3, zuwachs = 2.24, theta = 3.19,
+  # (damals theta = 3,19, das entspricht einer Auslichtung von −13,2 %)
+  p <- modifyList(p0, list(vorrat_heute = 321.4, vorrat_max = 592.3, zuwachs = 2.24, auslichtung = -13.2,
                            eingriff = 46.2, stoerung = 0.442, klima_zuwachs = -15.3,
                            verj_minderung = 5.3, anteil_ungenutzt = 0))
+  expect_equal(wald_theta(p), 3.19, tolerance = 0.01)
   expect_true(all(is.finite(antwort_frischholz(p))))
   expect_true(all(is.finite(rechne_kumuliert(p))))
+})
+
+test_that("theta trifft die eingestellte Reaktion auf Auslichtung; ausserhalb gilt die Grenze", {
+  verhaeltnis <- function(p, th) {
+    x <- p$vorrat_heute / p$vorrat_max
+    0.8 * (1 - (0.8 * x)^th) / (1 - x^th)
+  }
+  for (a in c(-10, -2, 0, 3)) {
+    p <- modifyList(p0, list(auslichtung = a))
+    expect_equal(100 * (verhaeltnis(p, wald_theta(p)) - 1), a, tolerance = 1e-9)
+  }
+  # mehr Zuwachs nach Auslichtung heisst eine flachere Kurve, also ein kleineres theta
+  th <- vapply(c(-10, -5, 0, 5), function(a) wald_theta(modifyList(p0, list(auslichtung = a))), 1)
+  expect_true(all(diff(th) < 0))
+  expect_equal(wald_theta(modifyList(p0, list(auslichtung = -50))), THETA_GRENZEN[2], tolerance = 1e-9)
+  expect_equal(wald_theta(modifyList(p0, list(auslichtung = 50))), THETA_GRENZEN[1], tolerance = 1e-9)
+})
+
+test_that("Standardwerte: Reaktion auf Auslichtung und Endvorrat im belegten Bereich", {
+  w <- wald_wachstum(p0)
+  expect_gte(p0$auslichtung, -6)
+  expect_lte(p0$auslichtung, 2)
+  expect_gte(w$vorrat_gleichgewicht, 500)
+  expect_lte(w$vorrat_gleichgewicht, 600)
 })
 
 test_that("die Kurzfassung der gefällten Bäume nimmt die erste Zeile der Waldantwort", {
@@ -67,6 +94,25 @@ test_that("Zuwachs zur Erklärung: netto wie der Regler, am grössten beim Spitz
   ohne <- wald_wachstum(modifyList(p0, list(eingriff = 0)))
   expect_equal(ohne$zuwachs_eingriff, ohne$zuwachs_heute)
   expect_equal(ohne$verlust_eingriff, ohne$verlust_heute)
+})
+
+test_that("im Gleichgewicht wächst ein ungenutzter Wald netto nicht mehr; ohne Störungen beim Maximum", {
+  w <- wald_wachstum(p0)
+  nach_eingriff <- function(V) {
+    wald_wachstum(modifyList(p0, list(eingriff = 100 * (1 - V / p0$vorrat_heute))))
+  }
+  g <- nach_eingriff(w$vorrat_gleichgewicht)
+  expect_equal(g$zuwachs_eingriff, g$verlust_eingriff, tolerance = 1e-9)
+  expect_gt(w$vorrat_gleichgewicht, p0$vorrat_heute)
+  expect_lt(w$vorrat_gleichgewicht, p0$vorrat_max)
+  expect_equal(wald_wachstum(modifyList(p0, list(stoerung = 0)))$vorrat_gleichgewicht, p0$vorrat_max)
+})
+
+test_that("der ⓘ-Text zum Höchstvorrat nennt das Gleichgewicht mit den Standardwerten", {
+  reg <- lies_register(file.path("..", "parameter.csv"))
+  text <- reg$quelle[reg$id == "vorrat_max"]
+  gleichgewicht <- round(wald_wachstum(p0)$vorrat_gleichgewicht, -1)
+  expect_true(grepl(paste0("bei rund ", gleichgewicht, " m³/ha"), text, fixed = TRUE))
 })
 
 test_that("Restholz ist nach einer Halbwertszeit zur Hälfte zersetzt", {
@@ -226,8 +272,8 @@ test_that("Klima und Bodenerholung wirken auf die Punktschätzung, aber nur schw
   # über die Form der Wachstumskurve. Die Bodenerholung kann höchstens den Bodenverlust zurückholen.
   plan50 <- function(aenderung) rechne_kumuliert(modifyList(p0, aenderung))["Plan IWB", JAHRE]
   basis <- plan50(list())
-  expect_gt(plan50(list(klima_zuwachs = -50)) - basis, 500)
-  expect_lt(plan50(list(klima_zuwachs = 20)) - basis, -500)
+  expect_gt(plan50(list(klima_zuwachs = -50)) - basis, 200)
+  expect_lt(plan50(list(klima_zuwachs = 20)) - basis, -200)
   expect_gt(plan50(list(boden_erholung = 0)) - basis, 500)
   expect_equal(plan50(list(boden_erholung = 0, boden_verlust = 0)),
                plan50(list(boden_erholung = 20, boden_verlust = 0)))

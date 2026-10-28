@@ -93,6 +93,13 @@ höchstens 0,95. Der Zuwachs hängt von der Dichte ab (theta-logistisch); \(r\) 
 der Nettozuwachs nach Störungen beim heutigen Vorrat \(g_0\) beträgt:</p>
 $$Z(B) \;=\; \frac{r}{\theta}\, B\, \big(1 - (xB)^{\theta}\big), \qquad
 r \;=\; \frac{(g_0 + \delta)\,\theta}{1 - x^{\theta}}$$
+<p>Die Form \(\theta\) folgt aus der Reaktion auf Auslichtung \(a\) (in %): Nach Entnahme von
+\(h_{\text{Bezug}} = 0{,}2\) des Vorrats wächst der Bestand um \(a\) % mehr oder weniger als ohne
+Eingriff. Das Verhältnis fällt mit \(\theta\); \(\theta\) wird durch Halbieren zwischen 0,05 und 20
+gesucht, ausserhalb gilt die nächste Grenze:</p>
+$$\frac{Z(1 - h_{\text{Bezug}})}{Z(1)} \;=\;
+\frac{(1 - h_{\text{Bezug}})\,\big(1 - ((1 - h_{\text{Bezug}})\,x)^{\theta}\big)}{1 - x^{\theta}}
+\;=\; 1 + \frac{a}{100}$$
 <p>Klimawirkung bis 2078 und Wuchsminderung nach dem Eingriff (Kalenderjahr \(t = y + a\)). Die
 Wuchsminderung \(v_E\) gilt für einen Eingriff von \(h_{\text{Bezug}} = 0{,}2\) (20 % des Vorrats);
 schwächere und stärkere Eingriffe mindern den Zuwachs im selben Verhältnis:</p>
@@ -133,11 +140,13 @@ e^{W}_{\text{Öl}} = \frac{e_{\text{Öl}} + v_{\text{Öl}}}{1000\, \eta_{\text{�
 e^{W}_{\text{Gas}} = \frac{e_{\text{Gas}} + v_{\text{Gas}} + m}{1000\, \eta_{\text{Gas}}}$$
 <p>Zur Erklärung, warum der Wald nur langsam aufholt: Zuwachs und Störungsverluste in m³/ha pro
 Jahr ohne Eingriff (\(B = 1\)) und gleich danach (\(B = 1 - h_E\)), ohne Klimawirkung und
-Wuchsminderung, sowie der Vorrat mit dem grössten Zuwachs (\(Z'(B) = 0\)):</p>
+Wuchsminderung, der Vorrat mit dem grössten Zuwachs (\(Z'(B) = 0\)) und der Vorrat, bei dem ein
+ungenutzter Wald netto nicht mehr wächst (durch Halbieren zwischen \(1\) und \(1/x\)):</p>
 $$V_{\text{heute}}\, Z(B), \qquad V_{\text{heute}}\, \delta\, B^3, \qquad
-V_{\text{Spitze}} \;=\; \frac{V_{\text{heute}}}{x}\, (1 + \theta)^{-1/\theta}$$
+V_{\text{Spitze}} \;=\; \frac{V_{\text{heute}}}{x}\, (1 + \theta)^{-1/\theta}, \qquad
+V_{\text{Gl}} \;=\; V_{\text{heute}}\, B_{\text{Gl}} \;\text{ mit }\; Z(B_{\text{Gl}}) = \delta\, B_{\text{Gl}}^3$$
 <p>Die Tabelle zeigt \(f_{\text{Fr}}(a)\) für \(a = 10, 20, 30, 50\): mit den Werten der Regler,
-als Median und 17. bis 83. Perzentil über alle Ziehungen (Abschnitt 10) und für die fünf
+als Median und 17. bis 83. Perzentil über alle Ziehungen (Abschnitt 10) und für die sechs
 Waldannahmen mit dem grössten Einfluss, je einzeln auf dem 5. und 95. Perzentil ihrer
 Verteilung.</p>
 
@@ -220,7 +229,7 @@ $$\mathcal N(m, \sigma^2) \;\to\; \mathcal N\!\left(
 <tr><td>\(\hat s_j,\ w,\ L_w\)</td><td>Herkunft der nächsten Tonne, Schadholz-Welle</td><td>anteil_*, welle_zusatz, welle_jahre</td></tr>
 <tr><td>\(\tau_{\text{Kr}},\ \tau_{\text{Tot}},\ h\)</td><td>Zersetzung von Restholz</td><td>hwz_kronen, hwz_totholz, humus_anteil</td></tr>
 <tr><td>\(p,\ \tau_P\)</td><td>Kaskade: gespeicherter Anteil, Halbwertszeit der Produkte</td><td>produkt_anteil, hwz_produkt</td></tr>
-<tr><td>\(V_{\text{heute}},\ V_{\max},\ g_0,\ \theta\)</td><td>Vorrat, Maximum, Nettozuwachs, Form der Wachstumskurve</td><td>vorrat_heute, vorrat_max, zuwachs, theta</td></tr>
+<tr><td>\(V_{\text{heute}},\ V_{\max},\ g_0,\ a\)</td><td>Vorrat, Wachstumsgrenze, Nettozuwachs, Reaktion auf Auslichtung (daraus \(\theta\))</td><td>vorrat_heute, vorrat_max, zuwachs, auslichtung</td></tr>
 <tr><td>\(h_E,\ \delta,\ c_K\)</td><td>Eingriffsstärke, Störungen, Klimawirkung</td><td>eingriff, stoerung, klima_zuwachs</td></tr>
 <tr><td>\(v_E,\ L_E\)</td><td>Wuchsminderung nach einem Eingriff von 20 % des Vorrats, Dauer</td><td>verj_minderung, verj_jahre</td></tr>
 <tr><td>\(w_U\)</td><td>Ohne Heizwerk ungenutzte Fläche</td><td>anteil_ungenutzt</td></tr>

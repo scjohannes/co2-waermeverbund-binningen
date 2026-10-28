@@ -350,7 +350,8 @@
     var alter = M.frischholzAlter(p);
     var w = M.waldWachstum(p);
     var werte = {
-      vorrat_spitze: F.zahl(w.vorrat_spitze, -1), eingriff: F.zahl(p.eingriff),
+      vorrat_spitze: F.zahl(w.vorrat_spitze, -1), vorrat_gleichgewicht: F.zahl(w.vorrat_gleichgewicht, -1),
+      eingriff: F.zahl(p.eingriff),
       zuwachs_heute: F.zahl(w.zuwachs_heute, 2), zuwachs_eingriff: F.zahl(w.zuwachs_eingriff, 2),
       verlust_heute: F.zahl(w.verlust_heute, 2), verlust_eingriff: F.zahl(w.verlust_eingriff, 2),
       a10: F.zahl(100 * alter[0])
@@ -409,8 +410,7 @@
     V.waldSzenarien(p, D.priors).forEach(function (s, i) {
       var z = nachId[s.id];
       var wert = F.zahl(s.wert, stellen(z.schritt));
-      zeile(i % 2 === 0 ? { text: z.label, zeilen: 2 } : null,
-        z.einheit === 'θ' ? 'θ = ' + wert : wert + ' ' + z.einheit, s.anteil.map(prozent));
+      zeile(i % 2 === 0 ? { text: z.label, zeilen: 2 } : null, wert + ' ' + z.einheit, s.anteil.map(prozent));
     });
     var ziel = $('t-wald');
     ziel.innerHTML = '';

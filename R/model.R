@@ -29,9 +29,13 @@ HOLZARTEN <- c(
 # Methan je kWh Erdgas (Heizwert rund 50 MJ/kg): 3,6 MJ / 50 MJ/kg = 72 g
 METHAN_G_PRO_KWH <- 72
 
-# Die Wuchsminderung nach dem Eingriff (verj_minderung) gilt für einen Eingriff von 20 % des
-# Vorrats; schwächere und stärkere Eingriffe mindern den Zuwachs im selben Verhältnis.
+# Bezugseingriff von 20 % des Vorrats. Die Wuchsminderung nach dem Eingriff (verj_minderung) gilt
+# für ihn, schwächere und stärkere Eingriffe mindern den Zuwachs im selben Verhältnis; die
+# Reaktion auf Auslichtung (auslichtung) ist der Mehr- oder Minderzuwachs nach ihm.
 EINGRIFF_BEZUG <- 20
+
+# Suchbereich für die Form der Wachstumskurve theta
+THETA_GRENZEN <- c(0.05, 20)
 
 lies_register <- function(pfad) {
   reg <- read.csv(pfad, fileEncoding = "UTF-8", stringsAsFactors = FALSE, na.strings = "")
@@ -66,6 +70,24 @@ holz_kennzahlen <- function(p) {
   )
 }
 
+# Form der Wachstumskurve (theta) aus der Reaktion auf Auslichtung: Nach Entnahme von
+# EINGRIFF_BEZUG % des Vorrats wächst der Bestand um p$auslichtung % mehr oder weniger als ohne
+# Eingriff (ohne Klimawirkung und Wuchsminderung). Das Verhältnis fällt mit theta; gesucht wird
+# durch Halbieren, ausserhalb von THETA_GRENZEN gilt die nächste Grenze.
+wald_theta <- function(p) {
+  x <- min(p$vorrat_heute / p$vorrat_max, 0.95)
+  b <- 1 - EINGRIFF_BEZUG / 100
+  verhaeltnis <- function(th) b * (1 - (b * x)^th) / (1 - x^th)
+  ziel <- 1 + p$auslichtung / 100
+  unten <- THETA_GRENZEN[1]
+  oben <- THETA_GRENZEN[2]
+  for (i in 1:60) {
+    mitte <- (unten + oben) / 2
+    if (verhaeltnis(mitte) > ziel) unten <- mitte else oben <- mitte
+  }
+  (unten + oben) / 2
+}
+
 # Zusätzlich gefällte lebende Bäume: Anteil des verbrannten CO2, der nach a Jahren noch
 # zusätzlich in der Luft ist. Verglichen wird ein Dauerwald-Bestand ohne und mit Eingriff;
 # der Zuwachs hängt von der Dichte ab (theta-logistisch). Ohne Heizwerk bleibt ein Teil
@@ -74,7 +96,7 @@ holz_kennzahlen <- function(p) {
 # Fläche mit Eingriff weiter. Zeilen: Erntejahr (Kohorte), Spalten: Jahre seit der Ernte.
 antwort_frischholz <- function(p, n = JAHRE) {
   x  <- min(p$vorrat_heute / p$vorrat_max, 0.95)             # heutiger Vorrat / Maximum
-  th <- p$theta
+  th <- wald_theta(p)
   g  <- p$zuwachs / 100
   d0 <- p$stoerung / 100
   h  <- p$eingriff / 100
@@ -122,17 +144,27 @@ frischholz_alter <- function(p) antwort_frischholz(p, max(WALD_ALTER) + 1)[1, WA
 
 # Zur Erklärung im Reiter «Holz & Wald»: Zuwachs vor Störungen und Störungsverluste in m³/ha pro
 # Jahr beim heutigen Vorrat und gleich nach dem Eingriff (ohne Klimawirkung und Wuchsminderung),
-# sowie der Vorrat, bei dem der Wald am meisten zuwächst. Wie in antwort_frischholz().
+# der Vorrat, bei dem der Wald am meisten zuwächst, und der Vorrat, bei dem ein ungenutzter Wald
+# netto nicht mehr wächst. Wie in antwort_frischholz().
 wald_wachstum <- function(p) {
   x  <- min(p$vorrat_heute / p$vorrat_max, 0.95)
-  th <- p$theta
+  th <- wald_theta(p)
   d0 <- p$stoerung / 100
   r <- (p$zuwachs / 100 + d0) * th / (1 - x^th)
   zuwachs <- function(B) p$vorrat_heute * r * B * (1 - (B * x)^th) / th
   verlust <- function(B) p$vorrat_heute * d0 * B^3
+  # Gleichgewicht zwischen heute und dem Maximum, durch Halbieren; ohne Störungen beim Maximum
+  unten <- 1
+  oben <- 1 / x
+  for (i in 1:60) {
+    mitte <- (unten + oben) / 2
+    if (zuwachs(mitte) > verlust(mitte)) unten <- mitte else oben <- mitte
+  }
   nach <- 1 - p$eingriff / 100
   list(
+    theta = th,
     vorrat_spitze = p$vorrat_heute / x * (1 + th)^(-1 / th),
+    vorrat_gleichgewicht = p$vorrat_heute * (unten + oben) / 2,
     zuwachs_heute = zuwachs(1), zuwachs_eingriff = zuwachs(nach),
     verlust_heute = verlust(1), verlust_eingriff = verlust(nach)
   )

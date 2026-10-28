@@ -356,7 +356,7 @@
   // Reiter «Holz & Wald»: die Annahmen mit dem grössten Einfluss darauf, wie schnell der Wald
   // nach dem Fällen aufholt. Jede wird einzeln auf das 5. und das 95. Perzentil ihrer Verteilung
   // gesetzt, die übrigen bleiben beim Wert des Reglers.
-  var WALD_ANNAHMEN = ['vorrat_max', 'theta', 'stoerung', 'anteil_ungenutzt', 'verj_minderung'];
+  var WALD_ANNAHMEN = ['stoerung', 'anteil_ungenutzt', 'auslichtung', 'verj_minderung', 'eingriff', 'vorrat_max'];
 
   function waldSzenarien(p, priors) {
     var zeilen = [];

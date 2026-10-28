@@ -28,9 +28,13 @@
   // Methan je kWh Erdgas (Heizwert rund 50 MJ/kg): 3,6 MJ / 50 MJ/kg = 72 g
   var METHAN_G_PRO_KWH = 72;
 
-  // Die Wuchsminderung nach dem Eingriff (verj_minderung) gilt für einen Eingriff von 20 % des
-  // Vorrats; schwächere und stärkere Eingriffe mindern den Zuwachs im selben Verhältnis.
+  // Bezugseingriff von 20 % des Vorrats. Die Wuchsminderung nach dem Eingriff (verj_minderung)
+  // gilt für ihn, schwächere und stärkere Eingriffe mindern den Zuwachs im selben Verhältnis; die
+  // Reaktion auf Auslichtung (auslichtung) ist der Mehr- oder Minderzuwachs nach ihm.
   var EINGRIFF_BEZUG = 20;
+
+  // Suchbereich für die Form der Wachstumskurve theta
+  var THETA_GRENZEN = [0.05, 20];
 
   var TECHNIKEN = ['holz', 'wrg', 'wp', 'oel', 'gas', 'luft', 'spitze'];
 
@@ -67,12 +71,29 @@
     };
   }
 
+  // Form der Wachstumskurve (theta) aus der Reaktion auf Auslichtung: Nach Entnahme von
+  // EINGRIFF_BEZUG % des Vorrats wächst der Bestand um p.auslichtung % mehr oder weniger als ohne
+  // Eingriff (ohne Klimawirkung und Wuchsminderung). Das Verhältnis fällt mit theta; gesucht wird
+  // durch Halbieren, ausserhalb von THETA_GRENZEN gilt die nächste Grenze.
+  function waldTheta(p) {
+    var x = Math.min(p.vorrat_heute / p.vorrat_max, 0.95);
+    var b = 1 - EINGRIFF_BEZUG / 100;
+    function verhaeltnis(th) { return b * (1 - Math.pow(b * x, th)) / (1 - Math.pow(x, th)); }
+    var ziel = 1 + p.auslichtung / 100;
+    var unten = THETA_GRENZEN[0], oben = THETA_GRENZEN[1];
+    for (var i = 0; i < 60; i++) {
+      var mitte = (unten + oben) / 2;
+      if (verhaeltnis(mitte) > ziel) unten = mitte; else oben = mitte;
+    }
+    return (unten + oben) / 2;
+  }
+
   // Zusätzlich gefällte lebende Bäume: Anteil des verbrannten CO2, der nach a Jahren noch
   // zusätzlich in der Luft ist (Dauerwald-Bestand ohne und mit Eingriff, theta-logistisch).
   // Ergebnis: Feld der Länge n * n, Zeile = Erntejahr (Kohorte), Spalte = Jahre seit der Ernte.
   function antwortFrischholz(p, n) {
     var x = Math.min(p.vorrat_heute / p.vorrat_max, 0.95);      // heutiger Vorrat / Maximum
-    var th = p.theta;
+    var th = waldTheta(p);
     var gz = p.zuwachs / 100;
     var d0 = p.stoerung / 100;
     var h = p.eingriff / 100;
@@ -132,18 +153,26 @@
 
   // Zur Erklärung im Reiter «Holz & Wald»: Zuwachs vor Störungen und Störungsverluste in m³/ha
   // pro Jahr beim heutigen Vorrat und gleich nach dem Eingriff (ohne Klimawirkung und
-  // Wuchsminderung), sowie der Vorrat, bei dem der Wald am meisten zuwächst. Wie in
-  // antwortFrischholz().
+  // Wuchsminderung), der Vorrat, bei dem der Wald am meisten zuwächst, und der Vorrat, bei dem
+  // ein ungenutzter Wald netto nicht mehr wächst. Wie in antwortFrischholz().
   function waldWachstum(p) {
     var x = Math.min(p.vorrat_heute / p.vorrat_max, 0.95);
-    var th = p.theta;
+    var th = waldTheta(p);
     var d0 = p.stoerung / 100;
     var r = (p.zuwachs / 100 + d0) * th / (1 - Math.pow(x, th));
     function zuwachs(B) { return p.vorrat_heute * r * B * (1 - Math.pow(B * x, th)) / th; }
     function verlust(B) { return p.vorrat_heute * d0 * B * B * B; }
+    // Gleichgewicht zwischen heute und dem Maximum, durch Halbieren; ohne Störungen beim Maximum
+    var unten = 1, oben = 1 / x;
+    for (var i = 0; i < 60; i++) {
+      var mitte = (unten + oben) / 2;
+      if (zuwachs(mitte) > verlust(mitte)) unten = mitte; else oben = mitte;
+    }
     var nach = 1 - p.eingriff / 100;
     return {
+      theta: th,
       vorrat_spitze: p.vorrat_heute / x * Math.pow(1 + th, -1 / th),
+      vorrat_gleichgewicht: p.vorrat_heute * (unten + oben) / 2,
       zuwachs_heute: zuwachs(1), zuwachs_eingriff: zuwachs(nach),
       verlust_heute: verlust(1), verlust_eingriff: verlust(nach)
     };
@@ -428,6 +457,7 @@
     standardwerte: standardwerte, lagerMethanFaktor: lagerMethanFaktor, stromPfad: stromPfad,
     holzKennzahlen: holzKennzahlen, antwortFrischholz: antwortFrischholz,
     WALD_ALTER: WALD_ALTER, frischholzAlter: frischholzAlter, waldWachstum: waldWachstum,
+    waldTheta: waldTheta,
     antwortZerfall: antwortZerfall, antwortKaskade: antwortKaskade,
     herkunftAnteile: herkunftAnteile, biogenKumuliert: biogenKumuliert,
     varianteDef: varianteDef, varianteKomponenten: varianteKomponenten,

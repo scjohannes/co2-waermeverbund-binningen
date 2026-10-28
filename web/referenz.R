@@ -18,7 +18,7 @@ faelle <- list(
   dezentral_ersatz = list(fossil_dezentral = 1, fossil_laufzeit = 11),
   welle = list(welle_zusatz = 40, welle_jahre = 8, anteil_frisch = 30, anteil_kronen = 30,
                anteil_totholz = 30, anteil_kaskade = 10),
-  wald_extrem = list(vorrat_heute = 321.4, vorrat_max = 592.3, zuwachs = 2.24, theta = 3.19,
+  wald_extrem = list(vorrat_heute = 321.4, vorrat_max = 592.3, zuwachs = 2.24, auslichtung = -13.2,
                      eingriff = 46.2, stoerung = 0.442, klima_zuwachs = -15.3, verj_minderung = 5.3,
                      anteil_ungenutzt = 0),
   vorrat_nahe = list(vorrat_max = 350),
@@ -107,7 +107,7 @@ ziehungen <- lapply(seq_len(nrow(z)), function(i) {
 
 # Reiter «Holz & Wald»: Erklärung, Szenarien und Spannweite der Waldantwort (auf den Ziehungen oben)
 wald_faelle <- list(standard = list(),
-                    verstellt = list(vorrat_max = 450, theta = 1.5, eingriff = 30, anteil_ungenutzt = 0))
+                    verstellt = list(vorrat_max = 450, auslichtung = 3, eingriff = 30, anteil_ungenutzt = 0))
 wald <- list(
   faelle = lapply(wald_faelle, function(aenderung) {
     p <- modifyList(p0, aenderung)

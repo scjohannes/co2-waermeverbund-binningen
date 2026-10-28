@@ -15,17 +15,35 @@ Nettozuwachs, vor allem wegen Zwangsnutzungen nach Trockenheit, Krankheiten und 
 Waldentwicklungsplan mehrheitlich ausgeschöpft [@awbb2024].</p>
 
 <h5>Der Wald holt nur auf, wenn er nach der Ernte schneller wächst</h5>
-<p>Im Modell wächst ein Wald bei mittlerem Vorrat am meisten, mit den eingestellten Werten bei
-rund <span data-wald="vorrat_spitze"></span> m³/ha. Im vorderen Leimental standen 2020 im Mittel
+<p>Wie stark ein Bestand nach einer Auslichtung zuwächst, ist in Versuchen gemessen: In zehn
+Buchen-Versuchsflächen in Deutschland erreichten mässig und stark durchforstete ältere Bestände
+94 bis 102 % der Volumenleistung schwach durchforsteter Bestände, junge 101 bis 106 %
+[@pretzsch2005]. Ältere Bestände wachsen nach einer Auslichtung also kaum schneller. Ein Wald
+wächst bei mittlerem Vorrat am meisten, im Modell mit den eingestellten Werten bei rund
+<span data-wald="vorrat_spitze"></span> m³/ha; im vorderen Leimental standen 2020 im Mittel
 346 m³/ha [@awbb2024]. Nach einem Eingriff von <span data-wald="eingriff"></span> % des Vorrats
 wächst der Bestand im Modell <span data-wald="zuwachs_eingriff"></span> statt
 <span data-wald="zuwachs_heute"></span> m³/ha pro Jahr. Dazu kommt: Der dichtere Wald ohne
 Eingriff verliert mehr durch Sturm, Käfer und Trockenheit (<span data-wald="verlust_heute"></span>
 statt <span data-wald="verlust_eingriff"></span> m³/ha pro Jahr), und sein Zuwachs nimmt ab, je
-näher er seinem Höchstvorrat kommt. Wie hoch dieser liegt, ist der unsicherste Wert. Im Sihlwald,
-einem rund 150-jährigen Buchenbestand, der bis 1990 intensiv genutzt wurde, standen im Mittel
-524 m³/ha [@commarmot2005]; im Buchenurwald Uholka-Schyrokyj Luh in den Karpaten sind es im
-Mittel 582 m³/ha [@commarmot2013].</p>
+näher er seiner Wachstumsgrenze kommt. Im Jura starben
+langjährig rund 0.33 % des Vorrats pro Jahr ab, in der Inventurperiode bis 2018/22, nach den
+Trockenjahren, rund 0.71 % [@thuerig2025].</p>
+
+<h5>Wie viel Vorrat ein ungenutzter Wald erreicht</h5>
+<p>Das ist der unsicherste Wert. In Baselland stehen in dichten Altholzbeständen im Mittel
+526 m³/ha, je nach Region 407 bis 625 m³/ha, im Leimental 467 m³/ha. Der Projektbericht für das
+Amt für Wald beider Basel, aus dem diese Zahlen stammen, geht davon aus, dass in der Region Basel
+erst über 600 m³/ha gleich viel Holz abstirbt, wie nachwächst; eine Quelle nennt er dafür nicht
+[@gabriel2020]. Ein ganzer ungenutzter Wald hat auch Lücken und junge Teile und liegt darum im
+Mittel tiefer als seine dichtesten Bestände: Im Buchenurwald Uholka-Schyrokyj Luh in den Karpaten
+stehen im Mittel des ganzen Gebiets 582 m³/ha [@commarmot2013], auf Teilflächen von einem Viertel
+Hektar bis über 1'000 m³/ha [@commarmot2005]. Realistisch sind damit rund 500 bis 600 m³/ha. Im
+Modell endet ein ungenutzter Wald mit den eingestellten Werten bei rund
+<span data-wald="vorrat_gleichgewicht"></span> m³/ha; die Standardwerte sind so gewählt, dass er in
+der Mitte dieses Bereichs endet. Für das Ergebnis zählt dieser Wert weniger, als man denkt: Das
+Modell passt die Form der Wachstumskurve so an, dass ein Bestand nach einer Auslichtung so
+zuwächst wie in den Versuchen, ob die Wachstumsgrenze nun höher oder tiefer liegt.</p>
 
 <h5>Zuerst wird es mehr</h5>
 <p>Stöcke und Wurzeln, rund ein Fünftel der Baummasse [@ipcc2003], bleiben im Wald und
@@ -40,10 +58,10 @@ noch <span data-wald="a10"></span> % des Kamin-CO₂ zusätzlich in der Luft.</p
 <p>Die Tabelle zeigt, wie viel vom CO₂ gefällter Bäume nach 10 bis 50 Jahren noch zusätzlich in
 der Luft ist. Oben stehen die eingestellten Werte, mit den Standardwerten also der realistische
 Fall, und der Bereich, in dem zwei Drittel von 1'000 Ziehungen aller unsicheren Annahmen liegen. Unten steht, was geschieht,
-wenn eine einzelne Annahme am Rand ihrer Verteilung liegt. Am stärksten hängt das Ergebnis am
-Höchstvorrat. Liegt er tief, wächst der ungenutzte Wald bald kaum mehr, und der genutzte holt
-rasch auf. Liegt er hoch, wächst der ungenutzte Wald noch lange kräftig weiter, und der Rückstand
-wird sogar grösser; dann stehen Werte über 100 %.</p>
+wenn eine einzelne Annahme am Rand ihrer Verteilung liegt. Am stärksten hängt das Ergebnis an den
+Störungsverlusten: Verliert ein dichter Wald viel durch Sturm, Käfer und Trockenheit, holt der
+genutzte rasch auf; verliert er wenig, wächst der ungenutzte Wald lange weiter, und der Rückstand
+bleibt. Werte über 100 % heissen, dass der genutzte Wald noch weiter zurückfällt.</p>
 <div class="tabelle-rahmen" id="t-wald"></div>
 
 <h5>Restholz ist schneller ausgeglichen</h5>
